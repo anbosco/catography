@@ -58,6 +58,12 @@ export function HomeExperience({
 
   const recentSightings = filteredSightings.slice(0, 4);
 
+  const totalApprovedCats = sightings.length;
+  const totalCroquettes = useMemo(
+    () => sightings.reduce((sum, sighting) => sum + sighting.likesCount, 0),
+    [sightings],
+  );
+
   const highlightedNeighborhoods = selectedNeighborhoods.map((name, index) => ({
     name,
     color: neighborhoodHighlightPalette[index % neighborhoodHighlightPalette.length],
@@ -110,6 +116,26 @@ export function HomeExperience({
             Parcours les chats déjà validés, filtre par quartier, et
             ajoute un nouveau chat directement depuis la carte.
           </p>
+
+          <div className="mt-6 flex flex-wrap gap-3">
+            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent-deep">
+                Chats observés
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+                {totalApprovedCats}
+              </p>
+            </div>
+
+            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent-deep">
+                Croquettes distribuées
+              </p>
+              <p className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
+                {totalCroquettes}
+              </p>
+            </div>
+          </div>
         </section>
 
         <div className="order-2 grid gap-4 xl:order-1 xl:row-span-2">
