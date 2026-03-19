@@ -189,36 +189,36 @@ textarea {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   border: 3px solid #fff7fb;
   border-radius: 999px;
-  background: rgba(255, 250, 252, 0.98);
-  box-shadow: 0 14px 28px rgba(145, 91, 118, 0.18);
-  color: var(--marker-tone, #f08cab);
+  background: var(--marker-tone, #f08cab);
+  box-shadow: 0 14px 28px rgba(145, 91, 118, 0.2);
   transform: translateY(1px);
 }
 
 .catography-map-marker--pending {
-  background: rgba(247, 255, 250, 0.98);
-  color: #34885a;
+  background: #63c38a;
   box-shadow: 0 14px 28px rgba(72, 150, 101, 0.22);
 }
 
-.catography-map-marker__svg {
+.catography-map-marker__emoji {
   display: block;
-  width: 24px;
-  height: 24px;
+  font-size: 18px;
+  line-height: 1;
+  transform: translateY(-1px);
+  filter: saturate(1.04);
 }
 
 .catography-map-marker::after {
   content: "";
   position: absolute;
   left: 50%;
-  bottom: -5px;
-  width: 12px;
-  height: 12px;
-  border-radius: 2px;
+  bottom: -8px;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
   background: inherit;
   transform: translateX(-50%) rotate(45deg);
   z-index: -1;

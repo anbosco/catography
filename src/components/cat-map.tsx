@@ -69,16 +69,7 @@ const defaultPopupSize = {
   height: 360,
 };
 
-const catMarkerSvg = `
-<svg class="catography-map-marker__svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-  <path d="M14 19L18 8l6 5 6-5 4 11c3.8 2.8 6 6.8 6 11.7C40 39.7 32.8 46 24 46S8 39.7 8 30.7C8 25.8 10.2 21.8 14 19Z" fill="currentColor"/>
-  <path d="M17.5 22.5c1.9-2 4.1-3 6.5-3s4.6 1 6.5 3" stroke="#FFF7FB" stroke-width="2.4" stroke-linecap="round"/>
-  <circle cx="18.5" cy="29" r="2.3" fill="#2F2329"/>
-  <circle cx="29.5" cy="29" r="2.3" fill="#2F2329"/>
-  <path d="M24 30.8l-2.1 3.2h4.2L24 30.8Z" fill="#2F2329"/>
-  <path d="M18.8 36.1c3.2 2.3 7.2 2.3 10.4 0" stroke="#2F2329" stroke-width="2.6" stroke-linecap="round"/>
-</svg>
-`;
+const catMarkerEmoji = `<span class="catography-map-marker__emoji" aria-hidden="true">🐱</span>`;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
@@ -88,35 +79,36 @@ function getMarkerTone(color: string) {
   const normalized = color.trim().toLowerCase();
 
   if (normalized.includes("noir")) {
-    return "#3d3136";
+    return "#5a434b";
   }
 
-  if (normalized.includes("blanc")) {
-    return "#d9d3d6";
+  if (normalized.includes("blanc") || normalized.includes("crème") || normalized.includes("creme")) {
+    return "#e4c896";
   }
 
-  if (normalized.includes("roux") || normalized.includes("ginger")) {
+  if (normalized.includes("roux") || normalized.includes("ginger") || normalized.includes("orange")) {
     return "#d67d43";
   }
 
-  if (normalized.includes("chocolat") || normalized.includes("marron")) {
-    return "#8f5b42";
+  if (
+    normalized.includes("écaille") ||
+    normalized.includes("ecaille") ||
+    normalized.includes("isabelle") ||
+    normalized.includes("calico")
+  ) {
+    return "#c78862";
+  }
+
+  if (
+    normalized.includes("chocolat") ||
+    normalized.includes("marron") ||
+    normalized.includes("brun")
+  ) {
+    return "#9a6a50";
   }
 
   if (normalized.includes("bleu") || normalized.includes("gris")) {
     return "#7d8ea8";
-  }
-
-  if (normalized.includes("crème") || normalized.includes("creme")) {
-    return "#e5be84";
-  }
-
-  if (normalized.includes("écaille") || normalized.includes("ecaille")) {
-    return "#b56c48";
-  }
-
-  if (normalized.includes("isabelle") || normalized.includes("calico")) {
-    return "#d78c66";
   }
 
   return "#f08cab";
@@ -356,7 +348,7 @@ export function CatMap({
     sightingMarkersRef.current = sightings.map((sighting) => {
       const element = document.createElement("button");
       element.type = "button";
-      element.innerHTML = catMarkerSvg;
+      element.innerHTML = catMarkerEmoji;
       element.className = getMarkerClassName(
         sighting,
         sighting.id === activeSightingId,
