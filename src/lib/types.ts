@@ -5,6 +5,10 @@ export type Coordinates = {
   longitude: number;
 };
 
+export type MapFocusTarget = Coordinates & {
+  zoom?: number;
+};
+
 export type PolygonGeometry = {
   type: "Polygon";
   coordinates: number[][][];

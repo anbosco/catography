@@ -5,10 +5,16 @@ import { useMemo, useState } from "react";
 import { CatMap } from "@/components/cat-map";
 import { CatSightingCard } from "@/components/cat-sighting-card";
 import { neighborhoodHighlightPalette, toggleFilterValue } from "@/lib/catalog-filters";
-import type { CatSighting, Coordinates, ToggleLikeResult } from "@/lib/types";
+import type {
+  CatSighting,
+  Coordinates,
+  MapFocusTarget,
+  ToggleLikeResult,
+} from "@/lib/types";
 
 type HomeExperienceProps = {
   initialSightings: CatSighting[];
+  initialMapFocus?: MapFocusTarget | null;
 };
 
 async function toggleLike(id: string) {
@@ -23,7 +29,10 @@ async function toggleLike(id: string) {
   return (await response.json()) as ToggleLikeResult;
 }
 
-export function HomeExperience({ initialSightings }: HomeExperienceProps) {
+export function HomeExperience({
+  initialSightings,
+  initialMapFocus = null,
+}: HomeExperienceProps) {
   const [sightings, setSightings] = useState(initialSightings);
   const [selectedCoordinates, setSelectedCoordinates] =
     useState<Coordinates | null>(null);
@@ -112,6 +121,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
             onToggleLike={handleToggleLike}
             heightClassName="h-[22rem] md:h-[28rem] xl:h-[38rem]"
             highlightedNeighborhoods={highlightedNeighborhoods}
+            initialFocus={initialMapFocus}
           />
 
           <div className="rounded-[1.7rem] border border-border bg-surface-strong p-6 shadow-sm">
@@ -239,6 +249,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
               sighting={sighting}
               compact
               onToggleLike={handleToggleLike}
+              showMapLink
             />
           ))}
         </div>

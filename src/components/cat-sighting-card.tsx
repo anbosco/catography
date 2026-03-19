@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useState } from "react";
 import { LikeToggleButton } from "@/components/like-toggle-button";
 import type { CatSighting } from "@/lib/types";
@@ -11,6 +12,7 @@ type CatSightingCardProps = {
   onToggleLike?: (id: string) => void;
   rankingLabel?: string;
   showStatusBadge?: boolean;
+  showMapLink?: boolean;
 };
 
 export function CatSightingCard({
@@ -19,8 +21,10 @@ export function CatSightingCard({
   onToggleLike,
   rankingLabel,
   showStatusBadge = false,
+  showMapLink = false,
 }: CatSightingCardProps) {
   const [isImageOpen, setIsImageOpen] = useState(false);
+  const mapHref = `/?lat=${sighting.latitude.toFixed(6)}&lng=${sighting.longitude.toFixed(6)}&zoom=14.6`;
 
   return (
     <>
@@ -124,13 +128,26 @@ export function CatSightingCard({
               </dl>
             </div>
 
-            <p
-              className={`break-words text-sm text-muted ${
-                compact ? "leading-6" : "leading-7"
-              }`}
-            >
-              {sighting.note}
-            </p>
+            <div className="grid gap-3">
+              <p
+                className={`break-words text-sm text-muted ${
+                  compact ? "leading-6" : "leading-7"
+                }`}
+              >
+                {sighting.note}
+              </p>
+              {showMapLink ? (
+                <div>
+                  <Link
+                    href={mapHref}
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-accent-deep"
+                  >
+                    <span aria-hidden="true">🗺️</span>
+                    Voir sur la carte
+                  </Link>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
       </article>

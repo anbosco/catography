@@ -91,6 +91,7 @@ export function RankingBoard({ initialSightings }: RankingBoardProps) {
             compact
             rankingLabel={`#${index + 1} • ${sighting.likesCount} croquette${sighting.likesCount > 1 ? "s" : ""}`}
             onToggleLike={handleToggleLike}
+            showMapLink
           />
         ))}
       </section>

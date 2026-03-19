@@ -369,6 +369,7 @@ export function CatsCatalog({ initialSightings }: CatsCatalogProps) {
                 sighting={sighting}
                 compact
                 onToggleLike={handleToggleLike}
+                showMapLink
               />
             ))}
           </div>

@@ -3,7 +3,7 @@
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import { getNeighborhoodFeatureCollection } from "@/lib/toulouse-neighborhoods";
-import type { CatSighting, Coordinates } from "@/lib/types";
+import type { CatSighting, Coordinates, MapFocusTarget } from "@/lib/types";
 
 type HighlightedNeighborhood = {
   name: string;
@@ -18,6 +18,7 @@ type CatMapProps = {
   onToggleLike?: (id: string) => void;
   heightClassName?: string;
   highlightedNeighborhoods?: HighlightedNeighborhood[];
+  initialFocus?: MapFocusTarget | null;
 };
 
 type PopupOffset = {
@@ -131,15 +132,15 @@ function getMarkerIconId(sighting: CatSighting) {
 
 function buildMarkerSvg(fill: string) {
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="54" viewBox="0 0 42 54" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="46" height="60" viewBox="0 0 46 60" fill="none">
       <defs>
-        <filter id="shadow" x="0" y="0" width="42" height="54" filterUnits="userSpaceOnUse">
+        <filter id="shadow" x="0" y="0" width="46" height="60" filterUnits="userSpaceOnUse">
           <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="rgba(145,91,118,0.22)"/>
         </filter>
       </defs>
       <g filter="url(#shadow)">
-        <circle cx="21" cy="21" r="18" fill="${fill}" stroke="#FFF7FB" stroke-width="3"/>
-        <rect x="14" y="28" width="14" height="14" rx="3" fill="${fill}" transform="rotate(45 21 35)"/>
+        <circle cx="23" cy="22" r="19" fill="${fill}" stroke="#FFF7FB" stroke-width="3"/>
+        <rect x="15" y="31" width="16" height="16" rx="3" fill="${fill}" transform="rotate(45 23 39)"/>
       </g>
     </svg>
   `;
@@ -175,6 +176,7 @@ export function CatMap({
   onToggleLike,
   heightClassName = "h-[38rem] md:h-[42rem]",
   highlightedNeighborhoods = [],
+  initialFocus = null,
 }: CatMapProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const mapViewportRef = useRef<HTMLDivElement | null>(null);
@@ -191,6 +193,7 @@ export function CatMap({
     offsetY: number;
   } | null>(null);
   const popupOffsetRef = useRef<PopupOffset>(initialPopupOffset);
+  const appliedFocusKeyRef = useRef<string | null>(null);
 
   const [activeSightingId, setActiveSightingId] = useState<string | null>(null);
   const [popupOffset, setPopupOffset] = useState<PopupOffset>(initialPopupOffset);
@@ -356,7 +359,7 @@ export function CatMap({
           layout: {
             "icon-image": ["get", "markerIcon"] as never,
             "icon-anchor": "bottom",
-            "icon-size": 1,
+            "icon-size": 1.12,
             "icon-allow-overlap": true,
             "icon-ignore-placement": true,
           },
@@ -371,9 +374,9 @@ export function CatMap({
           layout: {
             "text-field": "🐱",
             "text-font": ["Open Sans Regular"] as never,
-            "text-size": 16,
+            "text-size": 17,
             "text-anchor": "center",
-            "text-offset": [0, -1.15] as never,
+            "text-offset": [0, -1.22] as never,
             "text-allow-overlap": true,
             "text-ignore-placement": true,
           },
@@ -513,6 +516,28 @@ export function CatMap({
       );
     }
   }, [activeSightingId, markerAssetsReady, sightings]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+
+    if (!map || !initialFocus || !markerAssetsReady) {
+      return;
+    }
+
+    const focusKey = `${initialFocus.latitude}:${initialFocus.longitude}:${initialFocus.zoom ?? 14.6}`;
+
+    if (appliedFocusKeyRef.current === focusKey) {
+      return;
+    }
+
+    appliedFocusKeyRef.current = focusKey;
+    map.easeTo({
+      center: [initialFocus.longitude, initialFocus.latitude],
+      zoom: initialFocus.zoom ?? 14.6,
+      duration: 900,
+      essential: true,
+    });
+  }, [initialFocus, markerAssetsReady]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
