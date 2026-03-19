@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { CatSightingCard } from "@/components/cat-sighting-card";
@@ -34,7 +35,7 @@ export default async function Home() {
   return (
     <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12">
       <section className="relative overflow-hidden rounded-[2rem] border border-border bg-surface px-6 py-8 shadow-[var(--shadow)] backdrop-blur md:px-10 md:py-12">
-        <div className="absolute inset-x-0 top-0 h-32 bg-[radial-gradient(circle_at_top,_rgba(216,107,61,0.26),_transparent_65%)]" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-[radial-gradient(circle_at_top,_rgba(240,140,171,0.28),_transparent_70%)]" />
         <div className="relative grid gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div className="flex flex-col gap-5">
             <p className="text-sm font-medium uppercase tracking-[0.28em] text-accent-deep">
@@ -54,7 +55,7 @@ export default async function Home() {
             <div className="flex flex-wrap gap-3">
               <Link
                 href="/submit"
-                className="inline-flex items-center justify-center rounded-full bg-[#2f241f] px-5 py-3 text-sm font-semibold text-[#f8f1e5]"
+                className="inline-flex items-center justify-center rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb]"
               >
                 Ajouter un chat
               </Link>
@@ -67,20 +68,35 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {numbers.map((item) => (
-              <article
-                key={item.label}
-                className="rounded-[1.5rem] border border-border bg-surface-strong p-6"
-              >
-                <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
-                  {item.label}
-                </p>
-                <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
-                  {item.value}
-                </p>
-              </article>
-            ))}
+          <div className="grid gap-4">
+            <article className="overflow-hidden rounded-[1.5rem] border border-border bg-surface-strong shadow-sm">
+              <div className="relative h-44 w-full">
+                <Image
+                  src="/catography.png"
+                  alt="Catography mascot"
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 1024px) 100vw, 26rem"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.0),rgba(145,91,118,0.14))]" />
+              </div>
+            </article>
+
+            <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-3">
+              {numbers.map((item) => (
+                <article
+                  key={item.label}
+                  className="rounded-[1.5rem] border border-border bg-surface-strong p-6"
+                >
+                  <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+                    {item.label}
+                  </p>
+                  <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+                    {item.value}
+                  </p>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -89,12 +105,12 @@ export default async function Home() {
         <HomeMapPanel sightings={approvedSightings} />
 
         <aside className="space-y-6">
-          <section className="rounded-[1.75rem] border border-border bg-[#2f241f] p-6 text-[#f8f1e5] shadow-sm">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#f1b388]">
+          <section className="rounded-[1.75rem] border border-border bg-[#915b76] p-6 text-[#fff7fb] shadow-sm">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#ffe1eb]">
               Fonctionnel maintenant
             </p>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#e7d8c3]">
-              <li>Carte locale fiable, sans fond externe casse-gueule.</li>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#fff1f6]">
+              <li>Vraie carte raster de Toulouse.</li>
               <li>Selection d&apos;un point pour lancer un signalement.</li>
               <li>API locale de lecture, ajout, approbation et suppression.</li>
               <li>Donnees persistantes dans `data/sightings.json`.</li>

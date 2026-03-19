@@ -11,14 +11,21 @@ const moderationRules = [
 ];
 
 type AdminModerationPanelProps = {
-  initialPendingSightings: CatSighting[];
+  initialSightings: CatSighting[];
 };
 
 export function AdminModerationPanel({
-  initialPendingSightings,
+  initialSightings,
 }: AdminModerationPanelProps) {
-  const [pendingSightings, setPendingSightings] = useState(initialPendingSightings);
+  const [sightings, setSightings] = useState(initialSightings);
   const [feedback, setFeedback] = useState<string | null>(null);
+
+  const pendingSightings = sightings.filter(
+    (sighting) => sighting.status === "pending",
+  );
+  const approvedSightings = sightings.filter(
+    (sighting) => sighting.status === "approved",
+  );
 
   async function approveSighting(id: string) {
     const response = await fetch(`/api/sightings/${id}`, {
@@ -34,8 +41,9 @@ export function AdminModerationPanel({
       return;
     }
 
-    setPendingSightings((current) =>
-      current.filter((sighting) => sighting.id !== id),
+    const updated = (await response.json()) as CatSighting;
+    setSightings((current) =>
+      current.map((sighting) => (sighting.id === id ? updated : sighting)),
     );
     setFeedback("Signalement approuve.");
   }
@@ -50,9 +58,7 @@ export function AdminModerationPanel({
       return;
     }
 
-    setPendingSightings((current) =>
-      current.filter((sighting) => sighting.id !== id),
-    );
+    setSightings((current) => current.filter((sighting) => sighting.id !== id));
     setFeedback("Signalement supprime.");
   }
 
@@ -67,68 +73,106 @@ export function AdminModerationPanel({
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-muted">
           Les actions approuver et supprimer modifient maintenant les donnees
-          du projet. La vraie auth admin viendra avec Supabase.
+          du projet. Les listings deja approuves restent eux aussi supprimables.
         </p>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.86fr_1.14fr]">
-        <aside className="rounded-[1.75rem] border border-border bg-[#2f241f] p-6 text-[#f8f1e5] shadow-sm">
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#f1b388]">
+        <aside className="rounded-[1.75rem] border border-border bg-[#915b76] p-6 text-[#fff7fb] shadow-sm">
+          <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#ffe1eb]">
             Regles de moderation
           </p>
-          <ul className="mt-4 space-y-3 text-sm leading-6 text-[#e7d8c3]">
+          <ul className="mt-4 space-y-3 text-sm leading-6 text-[#fff1f6]">
             {moderationRules.map((rule) => (
               <li key={rule}>{rule}</li>
             ))}
           </ul>
 
-          <div className="mt-8 rounded-[1.5rem] bg-[rgba(255,255,255,0.08)] p-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#f1b388]">
+          <div className="mt-8 rounded-[1.5rem] bg-[rgba(255,255,255,0.12)] p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#ffe1eb]">
               Etat courant
             </p>
-            <p className="mt-3 text-sm leading-6 text-[#e7d8c3]">
-              {pendingSightings.length} signalement(s) en attente.
+            <p className="mt-3 text-sm leading-6 text-[#fff1f6]">
+              {pendingSightings.length} en attente, {approvedSightings.length} deja
+              publies.
             </p>
           </div>
 
           {feedback ? (
-            <p className="mt-4 text-sm font-medium text-[#f1b388]">{feedback}</p>
+            <p className="mt-4 text-sm font-medium text-[#ffe1eb]">{feedback}</p>
           ) : null}
         </aside>
 
-        <div className="grid gap-6">
-          {pendingSightings.length === 0 ? (
-            <section className="rounded-[1.75rem] border border-border bg-surface-strong p-6 shadow-sm">
+        <div className="grid gap-8">
+          <section className="grid gap-4">
+            <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
-                File vide
+                En attente
               </p>
-              <p className="mt-3 text-sm leading-6 text-muted">
-                Plus rien a moderer pour l&apos;instant.
+              <p className="mt-2 text-sm text-muted">
+                Les signalements en attente peuvent etre approuves ou supprimes.
               </p>
-            </section>
-          ) : null}
+            </div>
 
-          {pendingSightings.map((sighting) => (
-            <section key={sighting.id} className="grid gap-3">
-              <CatSightingCard sighting={sighting} compact />
-              <div className="flex flex-wrap gap-3">
-                <button
-                  type="button"
-                  onClick={() => approveSighting(sighting.id)}
-                  className="rounded-full bg-[#2f241f] px-4 py-2 text-sm font-semibold text-[#f8f1e5]"
-                >
-                  Approuver
-                </button>
-                <button
-                  type="button"
-                  onClick={() => removeSighting(sighting.id)}
-                  className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground"
-                >
-                  Supprimer
-                </button>
-              </div>
-            </section>
-          ))}
+            {pendingSightings.length === 0 ? (
+              <section className="rounded-[1.75rem] border border-border bg-surface-strong p-6 shadow-sm">
+                <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+                  File vide
+                </p>
+                <p className="mt-3 text-sm leading-6 text-muted">
+                  Plus rien a moderer pour l&apos;instant.
+                </p>
+              </section>
+            ) : null}
+
+            {pendingSightings.map((sighting) => (
+              <section key={sighting.id} className="grid gap-3">
+                <CatSightingCard sighting={sighting} compact />
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => approveSighting(sighting.id)}
+                    className="rounded-full bg-[#915b76] px-4 py-2 text-sm font-semibold text-[#fff7fb]"
+                  >
+                    Approuver
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeSighting(sighting.id)}
+                    className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              </section>
+            ))}
+          </section>
+
+          <section className="grid gap-4">
+            <div>
+              <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+                Deja approuves
+              </p>
+              <p className="mt-2 text-sm text-muted">
+                Les listings deja publies restent supprimables a tout moment.
+              </p>
+            </div>
+
+            {approvedSightings.map((sighting) => (
+              <section key={sighting.id} className="grid gap-3">
+                <CatSightingCard sighting={sighting} compact />
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    type="button"
+                    onClick={() => removeSighting(sighting.id)}
+                    className="rounded-full border border-border bg-surface px-4 py-2 text-sm font-semibold text-foreground"
+                  >
+                    Supprimer ce listing
+                  </button>
+                </div>
+              </section>
+            ))}
+          </section>
         </div>
       </section>
     </main>

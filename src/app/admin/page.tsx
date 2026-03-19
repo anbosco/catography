@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   noStore();
-  const pendingSightings = await getSightings("pending");
+  const sightings = await getSightings();
 
-  return <AdminModerationPanel initialPendingSightings={pendingSightings} />;
+  return <AdminModerationPanel initialSightings={sightings} />;
 }

@@ -120,7 +120,7 @@ export function SubmitSightingForm({
               Point selectionne
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span className="rounded-full bg-[#f7e1d3] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
+              <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
                 {coordinates
                   ? `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`
                   : "Clique sur la carte"}
@@ -232,7 +232,7 @@ export function SubmitSightingForm({
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center justify-center rounded-full bg-[#2f241f] px-5 py-3 text-sm font-semibold text-[#f8f1e5] disabled:opacity-60"
+                className="inline-flex items-center justify-center rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb] disabled:opacity-60"
               >
                 {isSubmitting ? "Envoi..." : "Envoyer le signalement"}
               </button>
@@ -243,11 +243,11 @@ export function SubmitSightingForm({
             </div>
           </form>
 
-          <section className="rounded-[1.75rem] border border-border bg-[#2f241f] p-6 text-[#f8f1e5] shadow-sm">
-            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#f1b388]">
+          <section className="rounded-[1.75rem] border border-border bg-[#915b76] p-6 text-[#fff7fb] shadow-sm">
+            <p className="text-sm font-medium uppercase tracking-[0.2em] text-[#ffe1eb]">
               Checklist utile
             </p>
-            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#e7d8c3]">
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#fff1f6]">
               {checklist.map((item) => (
                 <li key={item}>{item}</li>
               ))}

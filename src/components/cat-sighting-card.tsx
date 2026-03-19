@@ -30,7 +30,7 @@ export function CatSightingCard({
               </h3>
               <p className="text-sm text-muted">{sighting.neighborhood}</p>
             </div>
-            <span className="rounded-full bg-[#f7e1d3] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
+            <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
               {sighting.status}
             </span>
           </div>
