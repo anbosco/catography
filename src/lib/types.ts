@@ -5,6 +5,24 @@ export type Coordinates = {
   longitude: number;
 };
 
+export type PolygonGeometry = {
+  type: "Polygon";
+  coordinates: number[][][];
+};
+
+export type MultiPolygonGeometry = {
+  type: "MultiPolygon";
+  coordinates: number[][][][];
+};
+
+export type NeighborhoodGeometry = PolygonGeometry | MultiPolygonGeometry;
+
+export type ToulouseNeighborhood = {
+  code: string;
+  name: string;
+  geometry: NeighborhoodGeometry;
+};
+
 export type CatSighting = {
   id: string;
   name: string;

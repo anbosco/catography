@@ -10,25 +10,16 @@ const links = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-border/80 bg-[rgba(255,248,251,0.82)] backdrop-blur">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-6 py-4 sm:px-10 lg:px-12">
-        <Link href="/" className="flex items-center gap-3">
-          <span className="relative size-12 overflow-hidden rounded-full border border-border bg-[#ffe9f1] shadow-sm">
-            <Image
-              src="/catography.png"
-              alt="Catography"
-              fill
-              className="object-cover"
-              sizes="48px"
-            />
-          </span>
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.28em] text-accent-deep">
-              Catography
-            </p>
-            <p className="text-xs text-muted">
-              Chats de Toulouse, sans se prendre trop au serieux.
-            </p>
-          </div>
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-6 px-6 py-4 sm:px-10 lg:px-12">
+        <Link href="/" className="relative block h-14 w-[210px] shrink-0">
+          <Image
+            src="/catography.png"
+            alt="Catography"
+            fill
+            className="object-contain object-left"
+            sizes="210px"
+            priority
+          />
         </Link>
 
         <nav className="flex items-center gap-2 rounded-full border border-border bg-surface px-2 py-2 shadow-sm">

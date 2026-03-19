@@ -3,13 +3,14 @@
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { CatMap } from "@/components/cat-map";
+import { inferNeighborhoodFromCoordinates } from "@/lib/toulouse-neighborhoods";
 import type { CatSighting, Coordinates, CreateSightingInput } from "@/lib/types";
 
 const checklist = [
   "Clique sur la carte pour positionner le chat.",
-  "Le quartier, la couleur et le commentaire restent facultatifs.",
+  "Le quartier se remplit automatiquement depuis les limites officielles.",
   "La soumission part directement dans la file de moderation locale.",
-  "L'upload photo viendra au branchement Cloudinary ou Supabase Storage.",
+  "L'upload photo viendra au branchement Supabase Storage.",
 ];
 
 type SubmitSightingFormProps = {
@@ -52,6 +53,22 @@ export function SubmitSightingForm({
   useEffect(() => {
     setCoordinates(initialCoordinates);
   }, [initialCoordinates]);
+
+  useEffect(() => {
+    if (!coordinates) {
+      setFormValues((current) => ({
+        ...current,
+        neighborhood: "",
+      }));
+      return;
+    }
+
+    const inferredNeighborhood = inferNeighborhoodFromCoordinates(coordinates);
+    setFormValues((current) => ({
+      ...current,
+      neighborhood: inferredNeighborhood,
+    }));
+  }, [coordinates]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -158,17 +175,12 @@ export function SubmitSightingForm({
               </label>
 
               <label className="grid gap-2 text-sm font-medium text-foreground">
-                Quartier
+                Quartier detecte
                 <input
                   value={formValues.neighborhood}
-                  onChange={(event) =>
-                    setFormValues((current) => ({
-                      ...current,
-                      neighborhood: event.target.value,
-                    }))
-                  }
-                  className="rounded-2xl border border-border bg-white px-4 py-3 text-sm font-normal outline-none transition focus:border-accent"
-                  placeholder="Ex: Saint-Cyprien"
+                  readOnly
+                  className="rounded-2xl border border-border bg-[#fff4f8] px-4 py-3 text-sm font-normal text-muted outline-none"
+                  placeholder="Clique sur la carte"
                 />
               </label>
 

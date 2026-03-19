@@ -1,10 +1,38 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
+import { inferNeighborhoodFromCoordinates } from "@/lib/toulouse-neighborhoods";
 import type { CatSighting, CreateSightingInput, SightingStatus } from "@/lib/types";
 
 const dataDir = path.join(process.cwd(), "data");
 const dataFile = path.join(dataDir, "sightings.json");
+
+function needsNeighborhoodInference(neighborhood: string) {
+  const normalized = neighborhood.trim().toLowerCase();
+  return normalized === "" || normalized === "quartier inconnu" || normalized === "x";
+}
+
+function normalizeSightings(sightings: CatSighting[]) {
+  let hasChanges = false;
+
+  const normalized = sightings.map((sighting) => {
+    if (!needsNeighborhoodInference(sighting.neighborhood)) {
+      return sighting;
+    }
+
+    hasChanges = true;
+
+    return {
+      ...sighting,
+      neighborhood: inferNeighborhoodFromCoordinates({
+        latitude: sighting.latitude,
+        longitude: sighting.longitude,
+      }),
+    };
+  });
+
+  return { normalized, hasChanges };
+}
 
 async function ensureDataFile() {
   await mkdir(dataDir, { recursive: true });
@@ -23,21 +51,30 @@ async function writeSightingsFile(sightings: CatSighting[]) {
 
 export async function getSightings(status?: SightingStatus) {
   const sightings = await readSightingsFile();
+  const { normalized, hasChanges } = normalizeSightings(sightings);
 
-  if (!status) {
-    return sightings;
+  if (hasChanges) {
+    await writeSightingsFile(normalized);
   }
 
-  return sightings.filter((sighting) => sighting.status === status);
+  if (!status) {
+    return normalized;
+  }
+
+  return normalized.filter((sighting) => sighting.status === status);
 }
 
 export async function createSighting(input: CreateSightingInput) {
   const sightings = await readSightingsFile();
+  const inferredNeighborhood = inferNeighborhoodFromCoordinates({
+    latitude: input.latitude,
+    longitude: input.longitude,
+  });
 
   const newSighting: CatSighting = {
     id: randomUUID(),
     name: input.name || "Chat anonyme",
-    neighborhood: input.neighborhood || "Quartier inconnu",
+    neighborhood: inferredNeighborhood,
     color: input.color || "Non precise",
     behavior: input.behavior || "Mystere felin",
     note: input.note || "Aucun commentaire",

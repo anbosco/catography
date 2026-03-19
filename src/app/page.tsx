@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { unstable_noStore as noStore } from "next/cache";
 import { CatSightingCard } from "@/components/cat-sighting-card";
@@ -15,15 +14,18 @@ export default async function Home() {
 
   const numbers = [
     {
-      label: "Chats publics",
+      label: "Publics",
+      detail: "Chats visibles sur la carte",
       value: approvedSightings.length.toString().padStart(2, "0"),
     },
     {
-      label: "Soumissions en attente",
+      label: "En attente",
+      detail: "Soumissions a moderer",
       value: pendingSightings.length.toString().padStart(2, "0"),
     },
     {
-      label: "Quartiers deja croques",
+      label: "Quartiers",
+      detail: "Zones deja couvertes",
       value: new Set(
         approvedSightings.map((sighting) => sighting.neighborhood),
       )
@@ -42,10 +44,10 @@ export default async function Home() {
               Catography
             </p>
             <div className="max-w-3xl space-y-4">
-              <h1 className="text-4xl font-semibold tracking-tight text-foreground sm:text-5xl">
+              <h1 className="max-w-4xl text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-6xl">
                 La carte inutilement serieuse des chats de Toulouse.
               </h1>
-              <p className="max-w-2xl text-base leading-7 text-muted sm:text-lg">
+              <p className="max-w-2xl text-base leading-8 text-muted sm:text-lg">
                 Fonctionnalites d&apos;abord : la home lit les signalements
                 depuis l&apos;API locale, la soumission se fait par clic sur la
                 carte et l&apos;admin peut moderer pour de vrai.
@@ -69,29 +71,19 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-4">
-            <article className="overflow-hidden rounded-[1.5rem] border border-border bg-surface-strong shadow-sm">
-              <div className="relative h-44 w-full">
-                <Image
-                  src="/catography.png"
-                  alt="Catography mascot"
-                  fill
-                  className="object-cover"
-                  sizes="(max-width: 1024px) 100vw, 26rem"
-                />
-                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.0),rgba(145,91,118,0.14))]" />
-              </div>
-            </article>
-
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-3">
               {numbers.map((item) => (
                 <article
                   key={item.label}
-                  className="rounded-[1.5rem] border border-border bg-surface-strong p-6"
+                  className="min-w-0 rounded-[1.5rem] border border-border bg-surface-strong p-5"
                 >
-                  <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-accent-deep">
                     {item.label}
                   </p>
-                  <p className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
+                  <p className="mt-2 text-sm leading-6 text-muted">
+                    {item.detail}
+                  </p>
+                  <p className="mt-4 text-4xl font-semibold tracking-tight text-foreground">
                     {item.value}
                   </p>
                 </article>

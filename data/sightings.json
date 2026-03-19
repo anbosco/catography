@@ -1,8 +1,21 @@
 [
   {
+    "id": "8c76393f-3d39-4d31-a01d-8be7c395d194",
+    "name": "Ziggy",
+    "neighborhood": "Saint-Cyprien",
+    "color": "Bleu",
+    "behavior": "Social",
+    "note": "Test!",
+    "seenAt": "2026-03-19",
+    "latitude": 43.595911,
+    "longitude": 1.43697,
+    "status": "approved",
+    "image": "/cats/ginger.svg"
+  },
+  {
     "id": "94c49524-c171-4b4a-9881-d32e572db22c",
     "name": "hihi",
-    "neighborhood": "x",
+    "neighborhood": "Pont-des-Demoiselles",
     "color": "Tortie",
     "behavior": "Fuyant",
     "note": "coucou",
