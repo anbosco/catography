@@ -374,9 +374,9 @@ export function CatMap({
           layout: {
             "text-field": "🐱",
             "text-font": ["Open Sans Regular"] as never,
-            "text-size": 18,
+            "text-size": 17,
             "text-anchor": "center",
-            "text-offset": [0.02, -1.22] as never,
+            "text-offset": [0, -1.82] as never,
             "text-allow-overlap": true,
             "text-ignore-placement": true,
           },
@@ -510,8 +510,8 @@ export function CatMap({
         [
           "case",
           ["==", ["get", "id"], activeSightingId ?? ""],
-          19,
           18,
+          17,
         ] as never,
       );
       map.setLayoutProperty(
@@ -520,8 +520,8 @@ export function CatMap({
         [
           "case",
           ["==", ["get", "id"], activeSightingId ?? ""],
-          ["literal", [0.02, -1.2]],
-          ["literal", [0.02, -1.22]],
+          ["literal", [0, -1.78]],
+          ["literal", [0, -1.82]],
         ] as never,
       );
     }
