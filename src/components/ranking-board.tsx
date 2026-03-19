@@ -61,10 +61,10 @@ export function RankingBoard({ initialSightings }: RankingBoardProps) {
           Classement
         </p>
         <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground">
-          Les chats les plus aimés du moment.
+          Les chats qui ont gagné le plus de croquettes.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-8 text-muted">
-          Le classement évolue avec les cœurs ajoutés depuis la carte et les
+          Le classement évolue à chaque croquette donnée depuis la carte et les
           fiches complètes.
         </p>
         <div className="mt-5 flex flex-wrap gap-3">
@@ -89,7 +89,7 @@ export function RankingBoard({ initialSightings }: RankingBoardProps) {
             key={sighting.id}
             sighting={sighting}
             compact
-            rankingLabel={`#${index + 1} • ${sighting.likesCount} cœur${sighting.likesCount > 1 ? "s" : ""}`}
+            rankingLabel={`#${index + 1} • ${sighting.likesCount} croquette${sighting.likesCount > 1 ? "s" : ""}`}
             onToggleLike={handleToggleLike}
           />
         ))}

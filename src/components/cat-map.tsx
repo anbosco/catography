@@ -59,6 +59,44 @@ const initialPopupOffset: PopupOffset = {
   y: -32,
 };
 
+function getMarkerTone(color: string) {
+  const normalized = color.trim().toLowerCase();
+
+  if (normalized.includes("noir")) {
+    return "#3d3136";
+  }
+
+  if (normalized.includes("blanc")) {
+    return "#d9d3d6";
+  }
+
+  if (normalized.includes("roux") || normalized.includes("ginger")) {
+    return "#d67d43";
+  }
+
+  if (normalized.includes("chocolat") || normalized.includes("marron")) {
+    return "#8f5b42";
+  }
+
+  if (normalized.includes("bleu") || normalized.includes("gris")) {
+    return "#7d8ea8";
+  }
+
+  if (normalized.includes("crème") || normalized.includes("creme")) {
+    return "#e5be84";
+  }
+
+  if (normalized.includes("écaille") || normalized.includes("ecaille")) {
+    return "#b56c48";
+  }
+
+  if (normalized.includes("isabelle") || normalized.includes("calico")) {
+    return "#d78c66";
+  }
+
+  return "#f08cab";
+}
+
 function getMarkerClassName(
   sighting: CatSighting,
   isActive: boolean,
@@ -212,10 +250,13 @@ export function CatMap({
     sightingMarkersRef.current = sightings.map((sighting) => {
       const element = document.createElement("button");
       element.type = "button";
+      element.innerHTML =
+        '<span class="catography-map-marker__icon" aria-hidden="true">🐱</span>';
       element.className = getMarkerClassName(
         sighting,
         sighting.id === activeSightingId,
       );
+      element.style.setProperty("--marker-tone", getMarkerTone(sighting.color));
       element.setAttribute("aria-label", `Voir ${sighting.name}`);
       element.addEventListener("click", (event) => {
         event.preventDefault();
@@ -247,6 +288,7 @@ export function CatMap({
 
       element.className =
         getMarkerClassName(sighting, id === activeSightingId);
+      element.style.setProperty("--marker-tone", getMarkerTone(sighting.color));
     });
   }, [activeSightingId, sightings]);
 
@@ -495,9 +537,18 @@ export function CatMap({
                       ? "catography-popup__like catography-popup__like--active"
                       : "catography-popup__like"
                   }
+                  aria-label={
+                    activeSighting.likedByViewer
+                      ? `Retirer une croquette de ${activeSighting.name}`
+                      : `Donner une croquette a ${activeSighting.name}`
+                  }
                 >
                   {activeSighting.likedByViewer ? "♥" : "♡"}{" "}
-                  {activeSighting.likesCount}
+                  {activeSighting.likesCount > 0
+                    ? `${activeSighting.likesCount} croquette${
+                        activeSighting.likesCount > 1 ? "s" : ""
+                      }`
+                    : "Donner une croquette"}
                 </button>
               </div>
             </div>

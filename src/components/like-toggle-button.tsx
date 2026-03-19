@@ -13,6 +13,11 @@ export function LikeToggleButton({
   onToggle,
   compact = false,
 }: LikeToggleButtonProps) {
+  const label =
+    count > 0
+      ? `${count} croquette${count > 1 ? "s" : ""}`
+      : "Donner une croquette";
+
   return (
     <button
       type="button"
@@ -23,9 +28,11 @@ export function LikeToggleButton({
           : "border-border bg-white/80 text-muted hover:border-[#f3a3be] hover:text-accent-deep"
       } ${compact ? "px-2.5 py-1.5 text-xs" : ""}`}
       aria-pressed={liked}
+      aria-label={liked ? "Retirer une croquette" : "Donner une croquette"}
+      title={liked ? "Retirer une croquette" : "Donner une croquette"}
     >
       <span aria-hidden="true">{liked ? "♥" : "♡"}</span>
-      <span>{count}</span>
+      <span>{compact ? count : label}</span>
     </button>
   );
 }

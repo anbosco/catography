@@ -186,13 +186,17 @@ textarea {
 
 .catography-map-marker {
   position: relative;
-  width: 28px;
-  height: 28px;
-  border: 6px solid #fff7fb;
-  border-radius: 999px 999px 999px 0;
-  background: #f08cab;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 3px solid #fff7fb;
+  border-radius: 999px;
+  background: var(--marker-tone, #f08cab);
   box-shadow: 0 14px 28px rgba(145, 91, 118, 0.18);
-  transform: rotate(-45deg);
+  transform: translateY(2px);
+  font-size: 18px;
 }
 
 .catography-map-marker--pending {
@@ -200,16 +204,34 @@ textarea {
   box-shadow: 0 14px 28px rgba(72, 150, 101, 0.22);
 }
 
+.catography-map-marker__icon {
+  transform: translateY(1px);
+  filter: saturate(0.96);
+}
+
+.catography-map-marker::before,
 .catography-map-marker::after {
   content: "";
   position: absolute;
-  inset: 5px;
-  border-radius: 999px;
-  background: #fff7fb;
+  top: -5px;
+  width: 14px;
+  height: 14px;
+  border-radius: 4px 10px 4px 10px;
+  background: inherit;
+  z-index: -1;
+}
+
+.catography-map-marker::before {
+  left: 4px;
+  transform: rotate(-18deg);
+}
+
+.catography-map-marker::after {
+  right: 4px;
+  transform: scaleX(-1) rotate(-18deg);
 }
 
 .catography-map-marker--active {
-  background: #915b76;
   box-shadow:
     0 0 0 7px rgba(240, 140, 171, 0.22),
     0 16px 30px rgba(145, 91, 118, 0.24);
