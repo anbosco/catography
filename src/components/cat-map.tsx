@@ -132,15 +132,15 @@ function getMarkerIconId(sighting: CatSighting) {
 
 function buildMarkerSvg(fill: string) {
   return `
-    <svg xmlns="http://www.w3.org/2000/svg" width="52" height="68" viewBox="0 0 52 68" fill="none">
+    <svg xmlns="http://www.w3.org/2000/svg" width="58" height="76" viewBox="0 0 58 76" fill="none">
       <defs>
-        <filter id="shadow" x="0" y="0" width="52" height="68" filterUnits="userSpaceOnUse">
+        <filter id="shadow" x="0" y="0" width="58" height="76" filterUnits="userSpaceOnUse">
           <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="rgba(145,91,118,0.22)"/>
         </filter>
       </defs>
       <g filter="url(#shadow)">
-        <circle cx="26" cy="24" r="21" fill="${fill}" stroke="#FFF7FB" stroke-width="3"/>
-        <rect x="17" y="35" width="18" height="18" rx="3" fill="${fill}" transform="rotate(45 26 44)"/>
+        <circle cx="29" cy="26" r="23" fill="${fill}" stroke="#FFF7FB" stroke-width="3"/>
+        <rect x="19" y="39" width="20" height="20" rx="3" fill="${fill}" transform="rotate(45 29 49)"/>
       </g>
     </svg>
   `;
@@ -359,7 +359,7 @@ export function CatMap({
           layout: {
             "icon-image": ["get", "markerIcon"] as never,
             "icon-anchor": "bottom",
-            "icon-size": 1.24,
+            "icon-size": 1.32,
             "icon-allow-overlap": true,
             "icon-ignore-placement": true,
           },
@@ -374,9 +374,9 @@ export function CatMap({
           layout: {
             "text-field": "🐱",
             "text-font": ["Open Sans Regular"] as never,
-            "text-size": 19,
+            "text-size": 18,
             "text-anchor": "center",
-            "text-offset": [0, -1.28] as never,
+            "text-offset": [0.02, -1.22] as never,
             "text-allow-overlap": true,
             "text-ignore-placement": true,
           },
@@ -497,8 +497,8 @@ export function CatMap({
         [
           "case",
           ["==", ["get", "id"], activeSightingId ?? ""],
-          1.34,
-          1.24,
+          1.42,
+          1.32,
         ] as never,
       );
     }
@@ -510,8 +510,18 @@ export function CatMap({
         [
           "case",
           ["==", ["get", "id"], activeSightingId ?? ""],
-          20,
           19,
+          18,
+        ] as never,
+      );
+      map.setLayoutProperty(
+        markerEmojiLayerId,
+        "text-offset",
+        [
+          "case",
+          ["==", ["get", "id"], activeSightingId ?? ""],
+          ["literal", [0.02, -1.2]],
+          ["literal", [0.02, -1.22]],
         ] as never,
       );
     }
