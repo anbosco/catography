@@ -30,6 +30,11 @@ type PopupPosition = {
   top: number;
 };
 
+type MarkerTone = {
+  key: string;
+  color: string;
+};
+
 const toulouseBounds = new maplibregl.LngLatBounds(
   [1.3535, 43.556],
   [1.504, 43.648],
@@ -69,27 +74,27 @@ const defaultPopupSize = {
   height: 360,
 };
 
-const markerOffset: [number, number] = [0, -8];
-
-const catMarkerEmoji = `<span class="catography-map-marker__emoji" aria-hidden="true">🐱</span>`;
+const markerSourceId = "catography-sightings";
+const markerIconLayerId = `${markerSourceId}-icon`;
+const markerEmojiLayerId = `${markerSourceId}-emoji`;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(Math.max(value, min), max);
 }
 
-function getMarkerTone(color: string) {
+function getMarkerTone(color: string): MarkerTone {
   const normalized = color.trim().toLowerCase();
 
   if (normalized.includes("noir")) {
-    return "#5a434b";
+    return { key: "charcoal", color: "#5a434b" };
   }
 
   if (normalized.includes("blanc") || normalized.includes("crème") || normalized.includes("creme")) {
-    return "#e4c896";
+    return { key: "cream", color: "#e4c896" };
   }
 
   if (normalized.includes("roux") || normalized.includes("ginger") || normalized.includes("orange")) {
-    return "#d67d43";
+    return { key: "orange", color: "#d67d43" };
   }
 
   if (
@@ -98,7 +103,7 @@ function getMarkerTone(color: string) {
     normalized.includes("isabelle") ||
     normalized.includes("calico")
   ) {
-    return "#c78862";
+    return { key: "calico", color: "#c78862" };
   }
 
   if (
@@ -106,31 +111,60 @@ function getMarkerTone(color: string) {
     normalized.includes("marron") ||
     normalized.includes("brun")
   ) {
-    return "#9a6a50";
+    return { key: "brown", color: "#9a6a50" };
   }
 
   if (normalized.includes("bleu") || normalized.includes("gris")) {
-    return "#7d8ea8";
+    return { key: "slate", color: "#7d8ea8" };
   }
 
-  return "#f08cab";
+  return { key: "pink", color: "#f08cab" };
 }
 
-function getMarkerClassName(
-  sighting: CatSighting,
-  isActive: boolean,
-) {
-  const classNames = ["catography-map-marker"];
-
+function getMarkerIconId(sighting: CatSighting) {
   if (sighting.status === "pending") {
-    classNames.push("catography-map-marker--pending");
+    return "cat-pin-pending";
   }
 
-  if (isActive) {
-    classNames.push("catography-map-marker--active");
+  return `cat-pin-${getMarkerTone(sighting.color).key}`;
+}
+
+function buildMarkerSvg(fill: string) {
+  return `
+    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="54" viewBox="0 0 42 54" fill="none">
+      <defs>
+        <filter id="shadow" x="0" y="0" width="42" height="54" filterUnits="userSpaceOnUse">
+          <feDropShadow dx="0" dy="5" stdDeviation="3" flood-color="rgba(145,91,118,0.22)"/>
+        </filter>
+      </defs>
+      <g filter="url(#shadow)">
+        <circle cx="21" cy="21" r="18" fill="${fill}" stroke="#FFF7FB" stroke-width="3"/>
+        <rect x="14" y="28" width="14" height="14" rx="3" fill="${fill}" transform="rotate(45 21 35)"/>
+      </g>
+    </svg>
+  `;
+}
+
+function loadMarkerImage(
+  map: maplibregl.Map,
+  id: string,
+  fill: string,
+) {
+  if (map.hasImage(id)) {
+    return Promise.resolve();
   }
 
-  return classNames.join(" ");
+  return new Promise<void>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      if (!map.hasImage(id)) {
+        map.addImage(id, image, { pixelRatio: 2 });
+      }
+      resolve();
+    };
+    image.onerror = () => reject(new Error(`Impossible de charger l'icone ${id}.`));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(buildMarkerSvg(fill))}`;
+  });
 }
 
 export function CatMap({
@@ -147,8 +181,6 @@ export function CatMap({
   const mapRef = useRef<HTMLDivElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
-  const sightingMarkersRef = useRef<maplibregl.Marker[]>([]);
-  const markerElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
   const sightingsRef = useRef(sightings);
   const activeSightingIdRef = useRef<string | null>(null);
@@ -168,6 +200,7 @@ export function CatMap({
   );
   const [mapViewportSize, setMapViewportSize] = useState({ width: 0, height: 0 });
   const [popupSize, setPopupSize] = useState(defaultPopupSize);
+  const [markerAssetsReady, setMarkerAssetsReady] = useState(false);
 
   const handleSelectCoordinates = useEffectEvent((coordinates: Coordinates) => {
     onSelectCoordinates?.(coordinates);
@@ -288,11 +321,94 @@ export function CatMap({
       "bottom-right",
     );
 
-    map.on("load", () => {
+    map.on("load", async () => {
       map.fitBounds(toulouseBounds, {
         padding: 40,
         duration: 0,
       });
+
+      await Promise.all([
+        loadMarkerImage(map, "cat-pin-pending", "#63c38a"),
+        loadMarkerImage(map, "cat-pin-charcoal", "#5a434b"),
+        loadMarkerImage(map, "cat-pin-cream", "#e4c896"),
+        loadMarkerImage(map, "cat-pin-orange", "#d67d43"),
+        loadMarkerImage(map, "cat-pin-calico", "#c78862"),
+        loadMarkerImage(map, "cat-pin-brown", "#9a6a50"),
+        loadMarkerImage(map, "cat-pin-slate", "#7d8ea8"),
+        loadMarkerImage(map, "cat-pin-pink", "#f08cab"),
+      ]);
+
+      if (!map.getSource(markerSourceId)) {
+        map.addSource(markerSourceId, {
+          type: "geojson",
+          data: {
+            type: "FeatureCollection",
+            features: [],
+          },
+        });
+      }
+
+      if (!map.getLayer(markerIconLayerId)) {
+        map.addLayer({
+          id: markerIconLayerId,
+          type: "symbol",
+          source: markerSourceId,
+          layout: {
+            "icon-image": ["get", "markerIcon"] as never,
+            "icon-anchor": "bottom",
+            "icon-size": 1,
+            "icon-allow-overlap": true,
+            "icon-ignore-placement": true,
+          },
+        });
+      }
+
+      if (!map.getLayer(markerEmojiLayerId)) {
+        map.addLayer({
+          id: markerEmojiLayerId,
+          type: "symbol",
+          source: markerSourceId,
+          layout: {
+            "text-field": "🐱",
+            "text-font": ["Open Sans Regular"] as never,
+            "text-size": 16,
+            "text-anchor": "center",
+            "text-offset": [0, -1.15] as never,
+            "text-allow-overlap": true,
+            "text-ignore-placement": true,
+          },
+        });
+      }
+
+      map.on("mouseenter", markerIconLayerId, () => {
+        map.getCanvas().style.cursor = "pointer";
+      });
+
+      map.on("mouseleave", markerIconLayerId, () => {
+        map.getCanvas().style.cursor = selectable ? "crosshair" : "";
+      });
+
+      map.on("click", markerIconLayerId, (event) => {
+        const feature = event.features?.[0];
+        const markerId = feature?.properties?.id;
+
+        if (!markerId) {
+          return;
+        }
+
+        const sighting = sightingsRef.current.find((entry) => entry.id === markerId);
+
+        if (!sighting) {
+          return;
+        }
+
+        setActiveSightingId(sighting.id);
+        setPopupOffset(initialPopupOffset);
+        const point = map.project([sighting.longitude, sighting.latitude]);
+        setProjectedPoint({ x: point.x, y: point.y });
+      });
+
+      setMarkerAssetsReady(true);
     });
 
     const handleMapChange = () => {
@@ -318,6 +434,14 @@ export function CatMap({
     if (selectable) {
       map.getCanvas().style.cursor = "crosshair";
       map.on("click", (event) => {
+        const markerFeatures = map.queryRenderedFeatures(event.point, {
+          layers: [markerIconLayerId],
+        });
+
+        if (markerFeatures.length > 0) {
+          return;
+        }
+
         handleSelectCoordinates({
           latitude: event.lngLat.lat,
           longitude: event.lngLat.lng,
@@ -328,11 +452,9 @@ export function CatMap({
     return () => {
       map.off("move", handleMapChange);
       map.off("zoom", handleMapChange);
-      sightingMarkersRef.current.forEach((marker) => marker.remove());
       selectedMarkerRef.current?.remove();
       map.remove();
       mapInstanceRef.current = null;
-      sightingMarkersRef.current = [];
       selectedMarkerRef.current = null;
     };
   }, [selectable]);
@@ -340,57 +462,57 @@ export function CatMap({
   useEffect(() => {
     const map = mapInstanceRef.current;
 
-    if (!map) {
+    if (!map || !markerAssetsReady) {
       return;
     }
 
-    sightingMarkersRef.current.forEach((marker) => marker.remove());
-    markerElementsRef.current.clear();
+    const source = map.getSource(markerSourceId) as maplibregl.GeoJSONSource | undefined;
 
-    sightingMarkersRef.current = sightings.map((sighting) => {
-      const element = document.createElement("button");
-      element.type = "button";
-      element.innerHTML = catMarkerEmoji;
-      element.className = getMarkerClassName(
-        sighting,
-        sighting.id === activeSightingId,
+    if (!source) {
+      return;
+    }
+
+    source.setData({
+      type: "FeatureCollection",
+      features: sightings.map((sighting) => ({
+        type: "Feature",
+        geometry: {
+          type: "Point",
+          coordinates: [sighting.longitude, sighting.latitude],
+        },
+        properties: {
+          id: sighting.id,
+          markerIcon: getMarkerIconId(sighting),
+        },
+      })),
+    } as GeoJSON.FeatureCollection);
+
+    if (map.getLayer(markerIconLayerId)) {
+      map.setLayoutProperty(
+        markerIconLayerId,
+        "icon-size",
+        [
+          "case",
+          ["==", ["get", "id"], activeSightingId ?? ""],
+          1.08,
+          1,
+        ] as never,
       );
-      element.style.setProperty("--marker-tone", getMarkerTone(sighting.color));
-      element.setAttribute("aria-label", `Voir ${sighting.name}`);
-      element.addEventListener("click", (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        setActiveSightingId(sighting.id);
-        setPopupOffset(initialPopupOffset);
-        const point = map.project([sighting.longitude, sighting.latitude]);
-        setProjectedPoint({ x: point.x, y: point.y });
-      });
+    }
 
-      markerElementsRef.current.set(sighting.id, element);
-
-      return new maplibregl.Marker({
-        element,
-        anchor: "bottom",
-        offset: markerOffset,
-      })
-        .setLngLat([sighting.longitude, sighting.latitude])
-        .addTo(map);
-    });
-  }, [activeSightingId, sightings]);
-
-  useEffect(() => {
-    markerElementsRef.current.forEach((element, id) => {
-      const sighting = sightings.find((entry) => entry.id === id);
-
-      if (!sighting) {
-        return;
-      }
-
-      element.className =
-        getMarkerClassName(sighting, id === activeSightingId);
-      element.style.setProperty("--marker-tone", getMarkerTone(sighting.color));
-    });
-  }, [activeSightingId, sightings]);
+    if (map.getLayer(markerEmojiLayerId)) {
+      map.setLayoutProperty(
+        markerEmojiLayerId,
+        "text-size",
+        [
+          "case",
+          ["==", ["get", "id"], activeSightingId ?? ""],
+          17,
+          16,
+        ] as never,
+      );
+    }
+  }, [activeSightingId, markerAssetsReady, sightings]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

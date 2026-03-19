@@ -186,6 +186,15 @@ textarea {
 
 .catography-map-marker {
   position: relative;
+  width: 42px;
+  height: 54px;
+  background: transparent;
+  filter: drop-shadow(0 14px 20px rgba(145, 91, 118, 0.18));
+}
+
+.catography-map-marker__pin {
+  position: absolute;
+  inset: 0 auto auto 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -194,13 +203,6 @@ textarea {
   border: 3px solid #fff7fb;
   border-radius: 999px;
   background: var(--marker-tone, #f08cab);
-  box-shadow: 0 14px 28px rgba(145, 91, 118, 0.2);
-  transform: translateY(1px);
-}
-
-.catography-map-marker--pending {
-  background: #63c38a;
-  box-shadow: 0 14px 28px rgba(72, 150, 101, 0.22);
 }
 
 .catography-map-marker__emoji {
@@ -211,26 +213,33 @@ textarea {
   filter: saturate(1.04);
 }
 
-.catography-map-marker::after {
-  content: "";
+.catography-map-marker__tip {
   position: absolute;
   left: 50%;
-  bottom: -8px;
-  width: 14px;
-  height: 14px;
+  top: 34px;
+  width: 16px;
+  height: 16px;
   border-radius: 3px;
-  background: inherit;
+  background: var(--marker-tone, #f08cab);
   transform: translateX(-50%) rotate(45deg);
-  z-index: -1;
 }
 
-.catography-map-marker--active {
+.catography-map-marker--pending {
+  filter: drop-shadow(0 14px 20px rgba(72, 150, 101, 0.2));
+}
+
+.catography-map-marker--pending .catography-map-marker__pin,
+.catography-map-marker--pending .catography-map-marker__tip {
+  background: #63c38a;
+}
+
+.catography-map-marker--active .catography-map-marker__pin {
   box-shadow:
     0 0 0 7px rgba(240, 140, 171, 0.22),
     0 16px 30px rgba(145, 91, 118, 0.24);
 }
 
-.catography-map-marker--pending.catography-map-marker--active {
+.catography-map-marker--pending.catography-map-marker--active .catography-map-marker__pin {
   box-shadow:
     0 0 0 7px rgba(99, 195, 138, 0.2),
     0 16px 30px rgba(52, 136, 90, 0.26);

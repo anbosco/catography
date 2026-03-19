@@ -185,7 +185,7 @@ export function SubmitSightingForm({
           Ajouter un chat
         </p>
         <h1 className="mt-4 max-w-3xl text-4xl font-semibold tracking-tight text-foreground">
-          Clique sur la carte, joins une photo, et laisse l&apos;admin trancher.
+          Clique sur la carte, remplis les informations et ajoute une photo.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-muted">
           Le quartier est déduit automatiquement, les comportements peuvent être
@@ -353,7 +353,7 @@ export function SubmitSightingForm({
                 disabled={isSubmitting}
                 className="inline-flex items-center justify-center rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb] disabled:opacity-60"
               >
-                {isSubmitting ? "Envoi..." : "Envoyer le signalement"}
+                {isSubmitting ? "Envoi..." : "Valider"}
               </button>
 
               {feedback ? (
