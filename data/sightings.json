@@ -1,27 +1,70 @@
 [
   {
+    "id": "e04615e1-9152-462f-820b-8b04db3a9276",
+    "name": "Bro",
+    "neighborhood": "Capitole",
+    "color": "Roux",
+    "behavior": "Social, Protecteur du quartier, Patrouilleur, Suit les humains",
+    "behaviors": [
+      "Social",
+      "Protecteur du quartier",
+      "Patrouilleur",
+      "Suit les humains"
+    ],
+    "note": "Aucun commentaire",
+    "seenAt": "2026-03-19",
+    "latitude": 43.60064852256488,
+    "longitude": 1.437257539819086,
+    "status": "approved",
+    "imagePath": null,
+    "image": "/cats/ginger.svg"
+  },
+  {
+    "id": "cfdc05b0-16ad-4ef1-b39b-b32f1b665799",
+    "name": "Chat anonyme",
+    "neighborhood": "Ramier",
+    "color": "Non precise",
+    "behavior": "Fuyant",
+    "behaviors": [
+      "Fuyant"
+    ],
+    "note": "Aucun commentaire",
+    "seenAt": "2026-03-19",
+    "latitude": 43.584609,
+    "longitude": 1.429706,
+    "status": "approved",
+    "imagePath": "local:cfdc05b0-16ad-4ef1-b39b-b32f1b665799.webp",
+    "image": "/cats/ginger.svg"
+  },
+  {
+    "id": "e842ef16-4d7d-4681-9880-3400e1af9eab",
+    "name": "Chat anonyme",
+    "neighborhood": "Côte Pavée",
+    "color": "Non precise",
+    "behavior": "Gourmand",
+    "behaviors": [
+      "Gourmand"
+    ],
+    "note": "bébou",
+    "seenAt": "2026-03-19",
+    "latitude": 43.595292,
+    "longitude": 1.471223,
+    "status": "approved",
+    "image": "/cats/ginger.svg"
+  },
+  {
     "id": "8c76393f-3d39-4d31-a01d-8be7c395d194",
     "name": "Ziggy",
     "neighborhood": "Saint-Cyprien",
     "color": "Bleu",
     "behavior": "Social",
+    "behaviors": [
+      "Social"
+    ],
     "note": "Test!",
     "seenAt": "2026-03-19",
     "latitude": 43.595911,
     "longitude": 1.43697,
-    "status": "approved",
-    "image": "/cats/ginger.svg"
-  },
-  {
-    "id": "94c49524-c171-4b4a-9881-d32e572db22c",
-    "name": "hihi",
-    "neighborhood": "Pont-des-Demoiselles",
-    "color": "Tortie",
-    "behavior": "Fuyant",
-    "note": "coucou",
-    "seenAt": "2026-03-19",
-    "latitude": 43.58513223801921,
-    "longitude": 1.467945020334156,
     "status": "approved",
     "image": "/cats/ginger.svg"
   },
@@ -31,6 +74,10 @@
     "neighborhood": "Saint-Cyprien",
     "color": "Roux clair",
     "behavior": "Social, attend les gratouilles",
+    "behaviors": [
+      "Social",
+      "attend les gratouilles"
+    ],
     "note": "Souvent pose sur un rebord de fenetre en fin d'apres-midi.",
     "seenAt": "2026-03-14",
     "latitude": 43.6004,
@@ -44,6 +91,10 @@
     "neighborhood": "Capitole",
     "color": "Noir et blanc",
     "behavior": "Observe de loin, puis disparait",
+    "behaviors": [
+      "Observe de loin",
+      "puis disparait"
+    ],
     "note": "Vu proche de la place au lever du jour. Regard tres jugeant.",
     "seenAt": "2026-03-16",
     "latitude": 43.6045,
@@ -57,6 +108,10 @@
     "neighborhood": "Les Minimes",
     "color": "Gris bleute",
     "behavior": "Calme, accepte la compagnie",
+    "behaviors": [
+      "Calme",
+      "accepte la compagnie"
+    ],
     "note": "Reste souvent pres des velos et semble tenir le quartier.",
     "seenAt": "2026-03-11",
     "latitude": 43.6201,
@@ -70,6 +125,10 @@
     "neighborhood": "Les Carmes",
     "color": "Ecaille de tortue",
     "behavior": "Curieuse, mais garde ses distances",
+    "behaviors": [
+      "Curieuse",
+      "mais garde ses distances"
+    ],
     "note": "Tourne autour des terrasses et choisit ses humains au hasard.",
     "seenAt": "2026-03-18",
     "latitude": 43.5966,
@@ -83,6 +142,9 @@
     "neighborhood": "Patte d'Oie",
     "color": "Creme et roux",
     "behavior": "Tres gourmand",
+    "behaviors": [
+      "Tres gourmand"
+    ],
     "note": "A suivi une personne sur presque une rue complete.",
     "seenAt": "2026-03-15",
     "latitude": 43.5968,

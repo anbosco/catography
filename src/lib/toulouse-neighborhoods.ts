@@ -82,6 +82,26 @@ export function getToulouseNeighborhoods() {
   return neighborhoods;
 }
 
+export function getNeighborhoodByName(name: string) {
+  return neighborhoods.find((neighborhood) => neighborhood.name === name) ?? null;
+}
+
+export function getNeighborhoodFeatureCollection(names: string[]) {
+  return {
+    type: "FeatureCollection" as const,
+    features: names
+      .map((name) => getNeighborhoodByName(name))
+      .filter((neighborhood): neighborhood is ToulouseNeighborhood => Boolean(neighborhood))
+      .map((neighborhood) => ({
+        type: "Feature" as const,
+        properties: {
+          name: neighborhood.name,
+        },
+        geometry: neighborhood.geometry,
+      })),
+  };
+}
+
 export function inferNeighborhoodFromCoordinates(coordinates: Coordinates) {
   const point: Point = [coordinates.longitude, coordinates.latitude];
   const exactMatch = neighborhoods.find((neighborhood) =>

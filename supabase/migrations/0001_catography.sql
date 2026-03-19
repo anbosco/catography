@@ -4,11 +4,13 @@ create table if not exists public.cat_sightings (
   neighborhood text not null default 'Quartier inconnu',
   color text not null default 'Non precise',
   behavior text not null default 'Mystere felin',
+  behaviors text[] not null default '{}',
   note text not null default 'Aucun commentaire',
   latitude double precision not null,
   longitude double precision not null,
   status text not null default 'pending' check (status in ('pending', 'approved')),
   image_path text,
+  seen_at date not null default current_date,
   created_at timestamptz not null default now()
 );
 

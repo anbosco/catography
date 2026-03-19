@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { logout } from "@/app/login/actions";
+import { CatMap } from "@/components/cat-map";
 import { CatSightingCard } from "@/components/cat-sighting-card";
 import type { CatSighting } from "@/lib/types";
 
@@ -69,11 +71,11 @@ export function AdminModerationPanel({
           Admin
         </p>
         <h1 className="mt-4 max-w-2xl text-4xl font-semibold tracking-tight text-foreground">
-          Moderation locale connectee a l&apos;API.
+          Moderation des signalements.
         </h1>
         <p className="mt-4 max-w-3xl text-base leading-7 text-muted">
-          Les actions approuver et supprimer modifient maintenant les donnees
-          du projet. Les listings deja approuves restent eux aussi supprimables.
+          Vérifie les soumissions en attente, approuve les plus crédibles et
+          retire les signalements qui ne doivent pas rester en ligne.
         </p>
       </section>
 
@@ -98,12 +100,48 @@ export function AdminModerationPanel({
             </p>
           </div>
 
+          <form action={logout} className="mt-4">
+            <button
+              type="submit"
+              className="rounded-full border border-[rgba(255,255,255,0.24)] px-4 py-2 text-sm font-semibold text-[#fff7fb]"
+            >
+              Fermer la session admin
+            </button>
+          </form>
+
           {feedback ? (
             <p className="mt-4 text-sm font-medium text-[#ffe1eb]">{feedback}</p>
           ) : null}
         </aside>
 
         <div className="grid gap-8">
+          <section className="grid gap-4">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+                  Vue carte
+                </p>
+                <p className="mt-2 text-sm text-muted">
+                  Rose: deja publie. Vert: signalement en attente a verifier avant
+                  moderation.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-3 text-sm text-muted">
+                <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-2">
+                  <span className="h-3 w-3 rounded-full bg-[#f08cab]" />
+                  Approuve
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full bg-surface px-3 py-2">
+                  <span className="h-3 w-3 rounded-full bg-[#63c38a]" />
+                  En attente
+                </span>
+              </div>
+            </div>
+
+            <CatMap sightings={sightings} heightClassName="h-[24rem] xl:h-[28rem]" />
+          </section>
+
           <section className="grid gap-4">
             <div>
               <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
@@ -161,6 +199,18 @@ export function AdminModerationPanel({
             {approvedSightings.map((sighting) => (
               <section key={sighting.id} className="grid gap-3">
                 <CatSightingCard sighting={sighting} compact />
+                {sighting.approvedByName || sighting.approvedAt ? (
+                  <p className="text-sm text-muted">
+                    Approuvé
+                    {sighting.approvedAt
+                      ? ` le ${new Date(sighting.approvedAt).toLocaleDateString("fr-FR")}`
+                      : ""}
+                    {sighting.approvedByName
+                      ? ` par ${sighting.approvedByName}`
+                      : ""}
+                    .
+                  </p>
+                ) : null}
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"

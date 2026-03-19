@@ -1,17 +1,17 @@
 import { cookies } from "next/headers";
 import { unstable_noStore as noStore } from "next/cache";
-import { HomeExperience } from "@/components/home-experience";
+import { RankingBoard } from "@/components/ranking-board";
 import { getSightings } from "@/lib/sightings-store";
 import { readViewerToken } from "@/lib/visitor-token";
 
 export const dynamic = "force-dynamic";
 
-export default async function Home() {
+export default async function RankingPage() {
   noStore();
 
   const cookieStore = await cookies();
   const viewerToken = readViewerToken(cookieStore);
   const approvedSightings = await getSightings("approved", viewerToken);
 
-  return <HomeExperience initialSightings={approvedSightings} />;
+  return <RankingBoard initialSightings={approvedSightings} />;
 }

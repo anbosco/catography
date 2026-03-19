@@ -1,14 +1,28 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef } from "react";
+import { useEffect, useEffectEvent, useRef, useState } from "react";
 import maplibregl, { type StyleSpecification } from "maplibre-gl";
+import { getNeighborhoodFeatureCollection } from "@/lib/toulouse-neighborhoods";
 import type { CatSighting, Coordinates } from "@/lib/types";
+
+type HighlightedNeighborhood = {
+  name: string;
+  color: string;
+};
 
 type CatMapProps = {
   sightings: CatSighting[];
   selectable?: boolean;
   selectedCoordinates?: Coordinates | null;
   onSelectCoordinates?: (coordinates: Coordinates) => void;
+  onToggleLike?: (id: string) => void;
+  heightClassName?: string;
+  highlightedNeighborhoods?: HighlightedNeighborhood[];
+};
+
+type PopupOffset = {
+  x: number;
+  y: number;
 };
 
 const toulouseBounds = new maplibregl.LngLatBounds(
@@ -32,28 +46,86 @@ const toulouseMapStyle: StyleSpecification = {
       type: "raster",
       source: "osm-raster",
       paint: {
-        "raster-opacity": 0.92,
-        "raster-saturation": -0.48,
-        "raster-contrast": 0.08,
+        "raster-opacity": 0.94,
+        "raster-saturation": -0.28,
+        "raster-contrast": 0.05,
       },
     },
   ],
 };
+
+const initialPopupOffset: PopupOffset = {
+  x: 0,
+  y: -32,
+};
+
+function getMarkerClassName(
+  sighting: CatSighting,
+  isActive: boolean,
+) {
+  const classNames = ["catography-map-marker"];
+
+  if (sighting.status === "pending") {
+    classNames.push("catography-map-marker--pending");
+  }
+
+  if (isActive) {
+    classNames.push("catography-map-marker--active");
+  }
+
+  return classNames.join(" ");
+}
 
 export function CatMap({
   sightings,
   selectable = false,
   selectedCoordinates = null,
   onSelectCoordinates,
+  onToggleLike,
+  heightClassName = "h-[38rem] md:h-[42rem]",
+  highlightedNeighborhoods = [],
 }: CatMapProps) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const sightingMarkersRef = useRef<maplibregl.Marker[]>([]);
+  const markerElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
   const selectedMarkerRef = useRef<maplibregl.Marker | null>(null);
+  const sightingsRef = useRef(sightings);
+  const activeSightingIdRef = useRef<string | null>(null);
+  const draggingPopupRef = useRef<{
+    startX: number;
+    startY: number;
+    offsetX: number;
+    offsetY: number;
+  } | null>(null);
+  const popupOffsetRef = useRef<PopupOffset>(initialPopupOffset);
+
+  const [activeSightingId, setActiveSightingId] = useState<string | null>(null);
+  const [popupOffset, setPopupOffset] = useState<PopupOffset>(initialPopupOffset);
+  const [popupDragActive, setPopupDragActive] = useState(false);
+  const [projectedPoint, setProjectedPoint] = useState<{ x: number; y: number } | null>(
+    null,
+  );
 
   const handleSelectCoordinates = useEffectEvent((coordinates: Coordinates) => {
     onSelectCoordinates?.(coordinates);
   });
+
+  const activeSighting =
+    sightings.find((sighting) => sighting.id === activeSightingId) ?? null;
+
+  useEffect(() => {
+    sightingsRef.current = sightings;
+  }, [sightings]);
+
+  useEffect(() => {
+    activeSightingIdRef.current = activeSightingId;
+  }, [activeSightingId]);
+
+  useEffect(() => {
+    popupOffsetRef.current = popupOffset;
+  }, [popupOffset]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -80,10 +152,30 @@ export function CatMap({
 
     map.on("load", () => {
       map.fitBounds(toulouseBounds, {
-        padding: 36,
+        padding: 40,
         duration: 0,
       });
     });
+
+    const handleMapChange = () => {
+      const currentActiveId = activeSightingIdRef.current;
+
+      if (currentActiveId) {
+        const currentSighting = sightingsRef.current.find(
+          (sighting) => sighting.id === currentActiveId,
+        );
+
+        if (currentSighting) {
+          const point = map.project([
+            currentSighting.longitude,
+            currentSighting.latitude,
+          ]);
+          setProjectedPoint({ x: point.x, y: point.y });
+        }
+      }
+    };
+    map.on("move", handleMapChange);
+    map.on("zoom", handleMapChange);
 
     if (selectable) {
       map.getCanvas().style.cursor = "crosshair";
@@ -96,6 +188,8 @@ export function CatMap({
     }
 
     return () => {
+      map.off("move", handleMapChange);
+      map.off("zoom", handleMapChange);
       sightingMarkersRef.current.forEach((marker) => marker.remove());
       selectedMarkerRef.current?.remove();
       map.remove();
@@ -113,28 +207,118 @@ export function CatMap({
     }
 
     sightingMarkersRef.current.forEach((marker) => marker.remove());
+    markerElementsRef.current.clear();
 
     sightingMarkersRef.current = sightings.map((sighting) => {
-      const markerColor =
-        sighting.status === "approved" ? "#f08cab" : "#915b76";
-
-      const popup = new maplibregl.Popup({ offset: 18 }).setHTML(
-        `
-          <div class="catography-popup">
-            <p class="catography-popup__eyebrow">${sighting.neighborhood}</p>
-            <h3 class="catography-popup__title">${sighting.name}</h3>
-            <p class="catography-popup__meta">${sighting.color} • ${sighting.behavior}</p>
-            <p class="catography-popup__note">${sighting.note}</p>
-          </div>
-        `,
+      const element = document.createElement("button");
+      element.type = "button";
+      element.className = getMarkerClassName(
+        sighting,
+        sighting.id === activeSightingId,
       );
+      element.setAttribute("aria-label", `Voir ${sighting.name}`);
+      element.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setActiveSightingId(sighting.id);
+        setPopupOffset(initialPopupOffset);
+        const point = map.project([sighting.longitude, sighting.latitude]);
+        setProjectedPoint({ x: point.x, y: point.y });
+      });
 
-      return new maplibregl.Marker({ color: markerColor })
+      markerElementsRef.current.set(sighting.id, element);
+
+      return new maplibregl.Marker({
+        element,
+        anchor: "bottom",
+      })
         .setLngLat([sighting.longitude, sighting.latitude])
-        .setPopup(popup)
         .addTo(map);
     });
-  }, [sightings]);
+  }, [activeSightingId, sightings]);
+
+  useEffect(() => {
+    markerElementsRef.current.forEach((element, id) => {
+      const sighting = sightings.find((entry) => entry.id === id);
+
+      if (!sighting) {
+        return;
+      }
+
+      element.className =
+        getMarkerClassName(sighting, id === activeSightingId);
+    });
+  }, [activeSightingId, sightings]);
+
+  useEffect(() => {
+    const map = mapInstanceRef.current;
+
+    if (!map) {
+      return;
+    }
+
+    const sourceId = "catography-neighborhood-highlights";
+    const featureCollection = getNeighborhoodFeatureCollection(
+      highlightedNeighborhoods.map((entry) => entry.name),
+    );
+
+    const colorStops = [
+      "match",
+      ["get", "name"],
+      ...highlightedNeighborhoods.flatMap((entry) => [entry.name, entry.color]),
+      "rgba(240,140,171,0.2)",
+    ] as unknown[];
+
+    const outlineStops = [
+      "match",
+      ["get", "name"],
+      ...highlightedNeighborhoods.flatMap((entry) => [entry.name, entry.color]),
+      "rgba(145,91,118,0.6)",
+    ] as unknown[];
+
+    function applyLayers() {
+      const currentMap = map as maplibregl.Map;
+      const existingSource = currentMap.getSource(sourceId) as
+        | maplibregl.GeoJSONSource
+        | undefined;
+
+      if (existingSource) {
+        existingSource.setData(featureCollection);
+      } else {
+        currentMap.addSource(sourceId, {
+          type: "geojson",
+          data: featureCollection,
+        });
+
+        currentMap.addLayer({
+          id: `${sourceId}-fill`,
+          type: "fill",
+          source: sourceId,
+          paint: {
+            "fill-color": colorStops as never,
+            "fill-opacity": 0.22,
+          },
+        });
+
+        currentMap.addLayer({
+          id: `${sourceId}-line`,
+          type: "line",
+          source: sourceId,
+          paint: {
+            "line-color": outlineStops as never,
+            "line-width": 2.6,
+            "line-opacity": 0.92,
+          },
+        });
+      }
+    }
+
+    if (map.isStyleLoaded()) {
+      applyLayers();
+    } else {
+      map.once("load", applyLayers);
+    }
+  }, [highlightedNeighborhoods]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;
@@ -153,7 +337,7 @@ export function CatMap({
     const element = document.createElement("button");
     element.type = "button";
     element.className = "catography-selected-pin";
-    element.setAttribute("aria-label", "Point selectionne");
+    element.setAttribute("aria-label", "Point sélectionné");
 
     selectedMarkerRef.current = new maplibregl.Marker({
       element,
@@ -163,24 +347,163 @@ export function CatMap({
       .addTo(map);
   }, [selectedCoordinates]);
 
+  useEffect(() => {
+    if (!activeSighting) {
+      return;
+    }
+
+    function handlePointerMove(event: PointerEvent) {
+      if (!draggingPopupRef.current) {
+        return;
+      }
+
+      setPopupDragActive(true);
+      const nextOffset = {
+        x:
+          draggingPopupRef.current.offsetX +
+          (event.clientX - draggingPopupRef.current.startX),
+        y:
+          draggingPopupRef.current.offsetY +
+          (event.clientY - draggingPopupRef.current.startY),
+      };
+
+      popupOffsetRef.current = nextOffset;
+      setPopupOffset(nextOffset);
+    }
+
+    function handlePointerUp() {
+      draggingPopupRef.current = null;
+      setPopupDragActive(false);
+    }
+
+    window.addEventListener("pointermove", handlePointerMove);
+    window.addEventListener("pointerup", handlePointerUp);
+
+    return () => {
+      window.removeEventListener("pointermove", handlePointerMove);
+      window.removeEventListener("pointerup", handlePointerUp);
+    };
+  }, [activeSighting]);
+
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-border bg-[#f8ecf2] shadow-[var(--shadow)]">
-      <div className="flex items-center justify-between border-b border-border px-5 py-4">
+    <div
+      ref={wrapperRef}
+      className="rounded-[1.9rem] border border-border bg-[#f8ecf2] shadow-[var(--shadow)]"
+    >
+      <div className="flex items-center justify-between gap-4 border-b border-border px-6 py-5">
         <div>
-          <p className="text-sm font-medium uppercase tracking-[0.2em] text-accent-deep">
+          <p className="text-sm font-medium uppercase tracking-[0.22em] text-accent-deep">
             Carte interactive
           </p>
-          <p className="text-sm text-muted">
+          <p className="mt-1 text-sm text-muted">
             {selectable
               ? "Clique pour choisir l'emplacement du chat."
-              : "Carte reelle de Toulouse avec tuiles OpenStreetMap."}
+              : "Explore les chats déjà validés dans Toulouse."}
           </p>
         </div>
-        <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
+        <span className="rounded-full bg-[#ffe2ed] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
           Toulouse
         </span>
       </div>
-      <div ref={mapRef} className="h-[28rem] w-full" />
+
+      <div className={`relative overflow-visible ${heightClassName}`}>
+        <div
+          className="h-full w-full overflow-hidden rounded-b-[1.9rem]"
+          ref={mapRef}
+        />
+
+        {activeSighting && projectedPoint ? (
+          <div
+            className={`catography-floating-popup ${
+              popupDragActive ? "cursor-grabbing" : "cursor-grab"
+            }`}
+            style={{
+              left: projectedPoint.x,
+              top: projectedPoint.y,
+              transform: `translate(calc(-50% + ${popupOffset.x}px), calc(-100% + ${popupOffset.y}px))`,
+            }}
+          >
+            <div className="catography-popup">
+              <div
+                className={`catography-popup__drag-handle ${
+                  popupDragActive ? "cursor-grabbing" : "cursor-grab"
+                }`}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+
+                  draggingPopupRef.current = {
+                    startX: event.clientX,
+                    startY: event.clientY,
+                    offsetX: popupOffsetRef.current.x,
+                    offsetY: popupOffsetRef.current.y,
+                  };
+                }}
+              >
+                <span>Déplacer</span>
+              </div>
+
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                className="catography-popup__image"
+                src={activeSighting.image}
+                alt={activeSighting.name}
+              />
+
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={() => {
+                    setActiveSightingId(null);
+                    setProjectedPoint(null);
+                  }}
+                  className="catography-popup__dismiss"
+                  aria-label="Fermer"
+              >
+                ×
+              </button>
+
+              <p className="catography-popup__eyebrow">
+                {activeSighting.neighborhood}
+              </p>
+              <h3 className="catography-popup__title">{activeSighting.name}</h3>
+              <p className="catography-popup__meta">
+                {activeSighting.color} • {activeSighting.behaviorLabel}
+              </p>
+              <p className="catography-popup__note">{activeSighting.note}</p>
+
+              <div className="catography-popup__footer">
+                {activeSighting.status === "approved" ? (
+                  <a
+                    data-no-drag="true"
+                    className="catography-popup__link"
+                    href={`/cats#cat-${activeSighting.id}`}
+                  >
+                    Voir la fiche
+                  </a>
+                ) : (
+                  <span className="catography-popup__link opacity-60">
+                    En attente de moderation
+                  </span>
+                )}
+                <button
+                  type="button"
+                  data-no-drag="true"
+                  onClick={() => onToggleLike?.(activeSighting.id)}
+                  className={
+                    activeSighting.likedByViewer
+                      ? "catography-popup__like catography-popup__like--active"
+                      : "catography-popup__like"
+                  }
+                >
+                  {activeSighting.likedByViewer ? "♥" : "♡"}{" "}
+                  {activeSighting.likesCount}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
