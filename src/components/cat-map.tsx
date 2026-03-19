@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useEffectEvent, useRef, useState } from "react";
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import maplibregl, { type StyleSpecification } from "maplibre-gl";
 import { getNeighborhoodFeatureCollection } from "@/lib/toulouse-neighborhoods";
 import type { CatSighting, Coordinates } from "@/lib/types";
@@ -23,6 +23,11 @@ type CatMapProps = {
 type PopupOffset = {
   x: number;
   y: number;
+};
+
+type PopupPosition = {
+  left: number;
+  top: number;
 };
 
 const toulouseBounds = new maplibregl.LngLatBounds(
@@ -58,6 +63,26 @@ const initialPopupOffset: PopupOffset = {
   x: 0,
   y: -32,
 };
+
+const defaultPopupSize = {
+  width: 320,
+  height: 360,
+};
+
+const catMarkerSvg = `
+<svg class="catography-map-marker__svg" viewBox="0 0 48 48" aria-hidden="true" focusable="false">
+  <path d="M14 19L18 8l6 5 6-5 4 11c3.8 2.8 6 6.8 6 11.7C40 39.7 32.8 46 24 46S8 39.7 8 30.7C8 25.8 10.2 21.8 14 19Z" fill="currentColor"/>
+  <path d="M17.5 22.5c1.9-2 4.1-3 6.5-3s4.6 1 6.5 3" stroke="#FFF7FB" stroke-width="2.4" stroke-linecap="round"/>
+  <circle cx="18.5" cy="29" r="2.3" fill="#2F2329"/>
+  <circle cx="29.5" cy="29" r="2.3" fill="#2F2329"/>
+  <path d="M24 30.8l-2.1 3.2h4.2L24 30.8Z" fill="#2F2329"/>
+  <path d="M18.8 36.1c3.2 2.3 7.2 2.3 10.4 0" stroke="#2F2329" stroke-width="2.6" stroke-linecap="round"/>
+</svg>
+`;
+
+function clamp(value: number, min: number, max: number) {
+  return Math.min(Math.max(value, min), max);
+}
 
 function getMarkerTone(color: string) {
   const normalized = color.trim().toLowerCase();
@@ -124,7 +149,9 @@ export function CatMap({
   highlightedNeighborhoods = [],
 }: CatMapProps) {
   const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const mapViewportRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<HTMLDivElement | null>(null);
+  const popupRef = useRef<HTMLDivElement | null>(null);
   const mapInstanceRef = useRef<maplibregl.Map | null>(null);
   const sightingMarkersRef = useRef<maplibregl.Marker[]>([]);
   const markerElementsRef = useRef<Map<string, HTMLButtonElement>>(new Map());
@@ -145,6 +172,8 @@ export function CatMap({
   const [projectedPoint, setProjectedPoint] = useState<{ x: number; y: number } | null>(
     null,
   );
+  const [mapViewportSize, setMapViewportSize] = useState({ width: 0, height: 0 });
+  const [popupSize, setPopupSize] = useState(defaultPopupSize);
 
   const handleSelectCoordinates = useEffectEvent((coordinates: Coordinates) => {
     onSelectCoordinates?.(coordinates);
@@ -164,6 +193,83 @@ export function CatMap({
   useEffect(() => {
     popupOffsetRef.current = popupOffset;
   }, [popupOffset]);
+
+  useEffect(() => {
+    if (!mapViewportRef.current) {
+      return;
+    }
+
+    const node = mapViewportRef.current;
+    const updateSize = () => {
+      setMapViewportSize({
+        width: node.clientWidth,
+        height: node.clientHeight,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!popupRef.current) {
+      return;
+    }
+
+    const node = popupRef.current;
+    const updateSize = () => {
+      setPopupSize({
+        width: node.offsetWidth || defaultPopupSize.width,
+        height: node.offsetHeight || defaultPopupSize.height,
+      });
+    };
+
+    updateSize();
+    const observer = new ResizeObserver(updateSize);
+    observer.observe(node);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [activeSightingId]);
+
+  const popupPosition = useMemo<PopupPosition | null>(() => {
+    if (!projectedPoint || mapViewportSize.width === 0 || mapViewportSize.height === 0) {
+      return null;
+    }
+
+    const horizontalMargin = 16;
+    const verticalMargin = 16;
+    const anchorGap = 18;
+
+    const idealAboveTop = projectedPoint.y - popupSize.height - anchorGap + popupOffset.y;
+    const idealBelowTop = projectedPoint.y + anchorGap + popupOffset.y;
+    const opensBelow = idealAboveTop < verticalMargin;
+
+    return {
+      left: clamp(
+        projectedPoint.x - popupSize.width / 2 + popupOffset.x,
+        horizontalMargin,
+        Math.max(
+          horizontalMargin,
+          mapViewportSize.width - popupSize.width - horizontalMargin,
+        ),
+      ),
+      top: clamp(
+        opensBelow ? idealBelowTop : idealAboveTop,
+        verticalMargin,
+        Math.max(
+          verticalMargin,
+          mapViewportSize.height - popupSize.height - verticalMargin,
+        ),
+      ),
+    };
+  }, [mapViewportSize.height, mapViewportSize.width, popupOffset.x, popupOffset.y, popupSize.height, popupSize.width, projectedPoint]);
 
   useEffect(() => {
     if (!mapRef.current) {
@@ -250,8 +356,7 @@ export function CatMap({
     sightingMarkersRef.current = sightings.map((sighting) => {
       const element = document.createElement("button");
       element.type = "button";
-      element.innerHTML =
-        '<span class="catography-map-marker__icon" aria-hidden="true">🐱</span>';
+      element.innerHTML = catMarkerSvg;
       element.className = getMarkerClassName(
         sighting,
         sighting.id === activeSightingId,
@@ -448,21 +553,24 @@ export function CatMap({
         </span>
       </div>
 
-      <div className={`relative overflow-visible ${heightClassName}`}>
+      <div
+        ref={mapViewportRef}
+        className={`relative overflow-visible ${heightClassName}`}
+      >
         <div
           className="h-full w-full overflow-hidden rounded-b-[1.9rem]"
           ref={mapRef}
         />
 
-        {activeSighting && projectedPoint ? (
+        {activeSighting && popupPosition ? (
           <div
+            ref={popupRef}
             className={`catography-floating-popup ${
               popupDragActive ? "cursor-grabbing" : "cursor-grab"
             }`}
             style={{
-              left: projectedPoint.x,
-              top: projectedPoint.y,
-              transform: `translate(calc(-50% + ${popupOffset.x}px), calc(-100% + ${popupOffset.y}px))`,
+              left: popupPosition.left,
+              top: popupPosition.top,
             }}
           >
             <div className="catography-popup">

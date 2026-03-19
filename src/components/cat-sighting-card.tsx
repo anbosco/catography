@@ -10,6 +10,7 @@ type CatSightingCardProps = {
   compact?: boolean;
   onToggleLike?: (id: string) => void;
   rankingLabel?: string;
+  showStatusBadge?: boolean;
 };
 
 export function CatSightingCard({
@@ -17,6 +18,7 @@ export function CatSightingCard({
   compact = false,
   onToggleLike,
   rankingLabel,
+  showStatusBadge = false,
 }: CatSightingCardProps) {
   const [isImageOpen, setIsImageOpen] = useState(false);
 
@@ -56,67 +58,71 @@ export function CatSightingCard({
           </button>
 
           <div
-            className={`min-w-0 flex flex-col ${
+            className={`min-w-0 flex h-full flex-col justify-between ${
               compact ? "gap-4 p-5 md:p-6" : "gap-5 p-5 md:p-6"
             }`}
           >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div className="min-w-0 space-y-1">
-                {rankingLabel ? (
-                  <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent-deep">
-                    {rankingLabel}
-                  </p>
-                ) : null}
-                <h3
-                  className={`font-semibold tracking-tight text-foreground ${
-                    compact
-                      ? "text-[1.6rem] leading-[1.05] md:text-[1.85rem]"
-                      : "text-2xl"
-                  }`}
-                >
-                  {sighting.name}
-                </h3>
-                <p className="text-sm text-muted">{sighting.neighborhood}</p>
+            <div className="grid gap-4">
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div className="min-w-0 space-y-1">
+                  {rankingLabel ? (
+                    <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent-deep">
+                      {rankingLabel}
+                    </p>
+                  ) : null}
+                  <h3
+                    className={`font-semibold tracking-tight text-foreground ${
+                      compact
+                        ? "text-[1.6rem] leading-[1.05] md:text-[1.85rem]"
+                        : "text-2xl"
+                    }`}
+                  >
+                    {sighting.name}
+                  </h3>
+                  <p className="text-sm text-muted">{sighting.neighborhood}</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <LikeToggleButton
+                    liked={sighting.likedByViewer}
+                    count={sighting.likesCount}
+                    onToggle={
+                      onToggleLike ? () => onToggleLike(sighting.id) : undefined
+                    }
+                  />
+                  {showStatusBadge ? (
+                    <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
+                      {sighting.status}
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
-              <div className="flex items-center gap-3">
-                <LikeToggleButton
-                  liked={sighting.likedByViewer}
-                  count={sighting.likesCount}
-                  onToggle={
-                    onToggleLike ? () => onToggleLike(sighting.id) : undefined
-                  }
-                />
-                <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
-                  {sighting.status}
-                </span>
-              </div>
+              <dl
+                className={`grid text-sm text-muted sm:grid-cols-2 ${
+                  compact ? "gap-x-5 gap-y-3" : "gap-4"
+                }`}
+              >
+                <div>
+                  <dt className="font-medium text-foreground">Couleur</dt>
+                  <dd>{sighting.color}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-foreground">Comportements</dt>
+                  <dd className="break-words">{sighting.behaviorLabel}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-foreground">Vu le</dt>
+                  <dd>{sighting.seenAt}</dd>
+                </div>
+                <div>
+                  <dt className="font-medium text-foreground">Coordonnées</dt>
+                  <dd className="break-words">
+                    {sighting.latitude.toFixed(4)}, {sighting.longitude.toFixed(4)}
+                  </dd>
+                </div>
+              </dl>
             </div>
-
-            <dl
-              className={`grid text-sm text-muted sm:grid-cols-2 ${
-                compact ? "gap-x-5 gap-y-3" : "gap-4"
-              }`}
-            >
-              <div>
-                <dt className="font-medium text-foreground">Couleur</dt>
-                <dd>{sighting.color}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-foreground">Comportements</dt>
-                <dd className="break-words">{sighting.behaviorLabel}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-foreground">Vu le</dt>
-                <dd>{sighting.seenAt}</dd>
-              </div>
-              <div>
-                <dt className="font-medium text-foreground">Coordonnées</dt>
-                <dd className="break-words">
-                  {sighting.latitude.toFixed(4)}, {sighting.longitude.toFixed(4)}
-                </dd>
-              </div>
-            </dl>
 
             <p
               className={`break-words text-sm text-muted ${

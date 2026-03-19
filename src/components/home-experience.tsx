@@ -90,14 +90,27 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
   return (
     <main className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12">
       <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
-        <div className="grid gap-4">
+        <section className="order-1 rounded-[1.8rem] border border-border bg-surface px-6 py-7 shadow-sm xl:order-2">
+          <p className="text-sm font-medium uppercase tracking-[0.24em] text-accent-deep">
+            Carte des chats
+          </p>
+          <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground xl:text-5xl">
+            Repère les chats croisés dans Toulouse.
+          </h1>
+          <p className="mt-4 text-base leading-8 text-muted">
+            Parcours les chats déjà validés, filtre par quartier, et
+            ajoute un nouveau chat directement depuis la carte.
+          </p>
+        </section>
+
+        <div className="order-2 grid gap-4 xl:order-1 xl:row-span-2">
           <CatMap
             sightings={filteredSightings}
             selectable
             selectedCoordinates={selectedCoordinates}
             onSelectCoordinates={setSelectedCoordinates}
             onToggleLike={handleToggleLike}
-            heightClassName="h-[24rem] md:h-[30rem] xl:h-[38rem]"
+            heightClassName="h-[22rem] md:h-[28rem] xl:h-[38rem]"
             highlightedNeighborhoods={highlightedNeighborhoods}
           />
 
@@ -109,7 +122,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
                 </p>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
                   Clique sur un point pour préremplir la soumission, puis ajoute
-                  photo et détails du chat.
+                  la photo et les détails du chat.
                 </p>
               </div>
               <span className="rounded-full bg-[#ffe2ed] px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
@@ -136,74 +149,59 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
           </div>
         </div>
 
-        <aside className="grid gap-4 self-start">
-          <section className="rounded-[1.8rem] border border-border bg-surface px-6 py-7 shadow-sm">
-            <p className="text-sm font-medium uppercase tracking-[0.24em] text-accent-deep">
-              Carte des chats
-            </p>
-            <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground xl:text-5xl">
-              Repère les chats croisés dans Toulouse.
-            </h1>
-            <p className="mt-4 text-base leading-8 text-muted">
-              Parcours les chats déjà validés, filtre par quartier si besoin, et
-              ajoute un nouveau signalement directement depuis la carte.
-            </p>
-          </section>
+        <aside className="order-3 self-start rounded-[1.8rem] border border-border bg-surface-strong p-6 shadow-sm xl:order-3">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-deep">
+            Filtres quartier
+          </p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            {selectedNeighborhoods.map((neighborhood) => (
+              <button
+                key={neighborhood}
+                type="button"
+                onClick={() =>
+                  setSelectedNeighborhoods((current) =>
+                    current.filter((entry) => entry !== neighborhood),
+                  )
+                }
+                className="rounded-full bg-[rgba(240,140,171,0.16)] px-4 py-2 text-sm font-semibold text-accent-deep"
+              >
+                {neighborhood} ×
+              </button>
+            ))}
+            {selectedNeighborhoods.length === 0 ? (
+              <span className="rounded-full bg-white/80 px-4 py-2 text-sm text-muted">
+                Tous les quartiers affichés
+              </span>
+            ) : null}
+          </div>
 
-          <section className="rounded-[1.8rem] border border-border bg-surface-strong p-6 shadow-sm">
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-deep">
-              Filtres quartier
-            </p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              {selectedNeighborhoods.map((neighborhood) => (
-                <button
-                  key={neighborhood}
-                  type="button"
-                  onClick={() =>
-                    setSelectedNeighborhoods((current) =>
-                      current.filter((entry) => entry !== neighborhood),
-                    )
-                  }
-                  className="rounded-full bg-[rgba(240,140,171,0.16)] px-4 py-2 text-sm font-semibold text-accent-deep"
-                >
-                  {neighborhood} ×
-                </button>
-              ))}
-              {selectedNeighborhoods.length === 0 ? (
-                <span className="rounded-full bg-white/80 px-4 py-2 text-sm text-muted">
-                  Tous les quartiers affichés
-                </span>
-              ) : null}
-            </div>
-
-            <div className="mt-5 grid gap-4">
-              <div className="grid gap-2">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
-                  Quartiers
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {neighborhoods.map((neighborhood) => (
-                    <button
-                      key={neighborhood}
-                      type="button"
-                      onClick={() =>
-                        setSelectedNeighborhoods((current) =>
-                          toggleFilterValue(current, neighborhood),
-                        )
-                      }
-                      className={`rounded-full px-3 py-2 text-sm ${
-                        selectedNeighborhoods.includes(neighborhood)
-                          ? "bg-[#ffd9e8] font-semibold text-accent-deep"
-                          : "bg-white/80 text-muted"
-                      }`}
-                    >
-                      {neighborhood}
-                    </button>
-                  ))}
-                </div>
+          <div className="mt-5 grid gap-4">
+            <div className="grid gap-2">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">
+                Quartiers
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {neighborhoods.map((neighborhood) => (
+                  <button
+                    key={neighborhood}
+                    type="button"
+                    onClick={() =>
+                      setSelectedNeighborhoods((current) =>
+                        toggleFilterValue(current, neighborhood),
+                      )
+                    }
+                    className={`rounded-full px-3 py-2 text-sm ${
+                      selectedNeighborhoods.includes(neighborhood)
+                        ? "bg-[#ffd9e8] font-semibold text-accent-deep"
+                        : "bg-white/80 text-muted"
+                    }`}
+                  >
+                    {neighborhood}
+                  </button>
+                ))}
               </div>
             </div>
-          </section>
+          </div>
         </aside>
       </section>
 
@@ -214,7 +212,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
               Chats récents
             </p>
             <h2 className="mt-2 text-3xl font-semibold tracking-tight text-foreground">
-              Les derniers félins validés.
+              Les derniers chats ajoutés.
             </h2>
           </div>
 

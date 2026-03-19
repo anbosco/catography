@@ -165,7 +165,7 @@ export function AdminModerationPanel({
 
             {pendingSightings.map((sighting) => (
               <section key={sighting.id} className="grid gap-3">
-                <CatSightingCard sighting={sighting} compact />
+                <CatSightingCard sighting={sighting} compact showStatusBadge />
                 <div className="flex flex-wrap gap-3">
                   <button
                     type="button"
@@ -198,7 +198,7 @@ export function AdminModerationPanel({
 
             {approvedSightings.map((sighting) => (
               <section key={sighting.id} className="grid gap-3">
-                <CatSightingCard sighting={sighting} compact />
+                <CatSightingCard sighting={sighting} compact showStatusBadge />
                 {sighting.approvedByName || sighting.approvedAt ? (
                   <p className="text-sm text-muted">
                     Approuvé
