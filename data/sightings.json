@@ -1,0 +1,80 @@
+[
+  {
+    "id": "94c49524-c171-4b4a-9881-d32e572db22c",
+    "name": "hihi",
+    "neighborhood": "x",
+    "color": "Tortie",
+    "behavior": "Fuyant",
+    "note": "coucou",
+    "seenAt": "2026-03-19",
+    "latitude": 43.58513223801921,
+    "longitude": 1.467945020334156,
+    "status": "approved",
+    "image": "/cats/ginger.svg"
+  },
+  {
+    "id": "saint-cyprien-ginger",
+    "name": "Biscotte",
+    "neighborhood": "Saint-Cyprien",
+    "color": "Roux clair",
+    "behavior": "Social, attend les gratouilles",
+    "note": "Souvent pose sur un rebord de fenetre en fin d'apres-midi.",
+    "seenAt": "2026-03-14",
+    "latitude": 43.6004,
+    "longitude": 1.4312,
+    "status": "approved",
+    "image": "/cats/ginger.svg"
+  },
+  {
+    "id": "capitole-tuxedo",
+    "name": "Monsieur Cravate",
+    "neighborhood": "Capitole",
+    "color": "Noir et blanc",
+    "behavior": "Observe de loin, puis disparait",
+    "note": "Vu proche de la place au lever du jour. Regard tres jugeant.",
+    "seenAt": "2026-03-16",
+    "latitude": 43.6045,
+    "longitude": 1.444,
+    "status": "approved",
+    "image": "/cats/tuxedo.svg"
+  },
+  {
+    "id": "minimes-grey",
+    "name": "Poussiere",
+    "neighborhood": "Les Minimes",
+    "color": "Gris bleute",
+    "behavior": "Calme, accepte la compagnie",
+    "note": "Reste souvent pres des velos et semble tenir le quartier.",
+    "seenAt": "2026-03-11",
+    "latitude": 43.6201,
+    "longitude": 1.4346,
+    "status": "approved",
+    "image": "/cats/grey.svg"
+  },
+  {
+    "id": "carmes-calico",
+    "name": "Miette",
+    "neighborhood": "Les Carmes",
+    "color": "Ecaille de tortue",
+    "behavior": "Curieuse, mais garde ses distances",
+    "note": "Tourne autour des terrasses et choisit ses humains au hasard.",
+    "seenAt": "2026-03-18",
+    "latitude": 43.5966,
+    "longitude": 1.4476,
+    "status": "approved",
+    "image": "/cats/calico.svg"
+  },
+  {
+    "id": "patte-doie-nougat",
+    "name": "Nougat",
+    "neighborhood": "Patte d'Oie",
+    "color": "Creme et roux",
+    "behavior": "Tres gourmand",
+    "note": "A suivi une personne sur presque une rue complete.",
+    "seenAt": "2026-03-15",
+    "latitude": 43.5968,
+    "longitude": 1.4198,
+    "status": "approved",
+    "image": "/cats/ginger.svg"
+  }
+]
