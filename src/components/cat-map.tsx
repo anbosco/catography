@@ -69,6 +69,8 @@ const defaultPopupSize = {
   height: 360,
 };
 
+const markerOffset: [number, number] = [0, -8];
+
 const catMarkerEmoji = `<span class="catography-map-marker__emoji" aria-hidden="true">🐱</span>`;
 
 function clamp(value: number, min: number, max: number) {
@@ -369,6 +371,7 @@ export function CatMap({
       return new maplibregl.Marker({
         element,
         anchor: "bottom",
+        offset: markerOffset,
       })
         .setLngLat([sighting.longitude, sighting.latitude])
         .addTo(map);
