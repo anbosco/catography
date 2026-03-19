@@ -95,7 +95,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
             Carte des chats
           </p>
           <h1 className="mt-4 text-4xl font-semibold tracking-tight text-foreground xl:text-5xl">
-            Repère les chats croisés dans Toulouse.
+            Cat-ographie des chats croisés dans les rues de Toulouse.
           </h1>
           <p className="mt-4 text-base leading-8 text-muted">
             Parcours les chats déjà validés, filtre par quartier, et
@@ -121,7 +121,7 @@ export function HomeExperience({ initialSightings }: HomeExperienceProps) {
                   Ajouter depuis la carte
                 </p>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-muted">
-                  Clique sur un point pour préremplir la soumission, puis ajoute
+                  Clique sur un point pour pré-remplir la soumission, puis ajoute
                   la photo et les détails du chat.
                 </p>
               </div>
