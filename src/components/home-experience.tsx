@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useMemo, useRef, useState } from "react";
 import { CatMap } from "@/components/cat-map";
 import { CatSightingCard } from "@/components/cat-sighting-card";
 import { neighborhoodHighlightPalette, toggleFilterValue } from "@/lib/catalog-filters";
+import { setPendingSubmitPhoto } from "@/lib/submit-launcher-store";
 import type {
   CatSighting,
   Coordinates,
@@ -33,10 +35,14 @@ export function HomeExperience({
   initialSightings,
   initialMapFocus = null,
 }: HomeExperienceProps) {
+  const router = useRouter();
   const [sightings, setSightings] = useState(initialSightings);
   const [selectedCoordinates, setSelectedCoordinates] =
     useState<Coordinates | null>(null);
   const [selectedNeighborhoods, setSelectedNeighborhoods] = useState<string[]>([]);
+  const [quickAddOpen, setQuickAddOpen] = useState(false);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
 
   const neighborhoods = useMemo(
     () =>
@@ -102,8 +108,18 @@ export function HomeExperience({
     );
   }
 
+  function handleQuickAddPhoto(file: File | null) {
+    if (!file) {
+      return;
+    }
+
+    setPendingSubmitPhoto(file);
+    setQuickAddOpen(false);
+    router.push("/submit?mobileFlow=1");
+  }
+
   return (
-    <main className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12">
+    <main className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-8 px-6 pt-10 pb-24 sm:px-10 md:pb-10 lg:px-12">
       <section className="grid gap-6 xl:grid-cols-[1.18fr_0.82fr]">
         <section className="order-1 rounded-[1.8rem] border border-border bg-surface px-6 py-7 shadow-sm xl:order-2">
           <p className="text-sm font-medium uppercase tracking-[0.24em] text-accent-deep">
@@ -118,7 +134,7 @@ export function HomeExperience({
           </p>
 
           <div className="mt-6 flex flex-wrap gap-3">
-            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center">
+            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center items-center">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent-deep">
                 Chats observés
               </p>
@@ -127,7 +143,7 @@ export function HomeExperience({
               </p>
             </div>
 
-            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center">
+            <div className="min-w-[10rem] rounded-[1.2rem] border border-border bg-surface-strong px-4 py-3 shadow-sm text-center items-center">
               <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-accent-deep">
                 Croquettes distribuées
               </p>
@@ -280,6 +296,83 @@ export function HomeExperience({
           ))}
         </div>
       </section>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex justify-center px-4 md:hidden">
+        <button
+          type="button"
+          onClick={() => setQuickAddOpen(true)}
+          className="pointer-events-auto inline-flex items-center gap-3 rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb] shadow-[0_18px_40px_rgba(145,91,118,0.28)]"
+        >
+          <span className="text-lg leading-none">+</span>
+          Ajouter un chat
+        </button>
+      </div>
+
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(event) => {
+          handleQuickAddPhoto(event.target.files?.[0] ?? null);
+          event.currentTarget.value = "";
+        }}
+      />
+      <input
+        ref={galleryInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(event) => {
+          handleQuickAddPhoto(event.target.files?.[0] ?? null);
+          event.currentTarget.value = "";
+        }}
+      />
+
+      {quickAddOpen ? (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <button
+            type="button"
+            aria-label="Fermer le menu d'ajout"
+            className="absolute inset-0 bg-[rgba(28,18,24,0.28)] backdrop-blur-[2px]"
+            onClick={() => setQuickAddOpen(false)}
+          />
+          <div className="absolute inset-x-4 bottom-4 rounded-[2rem] border border-border bg-surface p-5 shadow-[0_24px_60px_rgba(61,40,49,0.26)]">
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-accent-deep">
+              Ajouter un chat
+            </p>
+            <p className="mt-2 text-sm leading-6 text-muted">
+              Lance la capture tout de suite, ou ouvre le formulaire mobile pour
+              choisir une photo existante.
+            </p>
+
+            <div className="mt-5 grid gap-3">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="inline-flex items-center justify-center rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb]"
+              >
+                📸 Prendre une photo
+              </button>
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current?.click()}
+                className="inline-flex items-center justify-center rounded-full border border-border bg-white/90 px-5 py-3 text-sm font-semibold text-foreground"
+              >
+                🖼️ Choisir depuis la galerie
+              </button>
+              <Link
+                href="/submit?mobileFlow=1"
+                onClick={() => setQuickAddOpen(false)}
+                className="inline-flex items-center justify-center rounded-full border border-border bg-white/80 px-5 py-3 text-sm font-semibold text-muted"
+              >
+                ➜ Continuer sans photo
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </main>
   );
 }

@@ -7,11 +7,13 @@ import {
   catBehaviorOptions,
   catColorOptions,
 } from "@/lib/cat-taxonomy";
+import { takePendingSubmitPhoto } from "@/lib/submit-launcher-store";
 import { inferNeighborhoodFromCoordinates } from "@/lib/toulouse-neighborhoods";
 import type {
   CatSighting,
   Coordinates,
   CreateSightingInput,
+  MapFocusTarget,
   ToggleLikeResult,
 } from "@/lib/types";
 
@@ -50,17 +52,24 @@ export function SubmitSightingForm({
   approvedSightings,
 }: SubmitSightingFormProps) {
   const searchParams = useSearchParams();
-  const initialLatitude = Number(searchParams.get("lat"));
-  const initialLongitude = Number(searchParams.get("lng"));
+  const initialLatitude = searchParams.get("lat");
+  const initialLongitude = searchParams.get("lng");
 
   const initialCoordinates = useMemo<Coordinates | null>(() => {
-    if (!Number.isFinite(initialLatitude) || !Number.isFinite(initialLongitude)) {
+    if (!initialLatitude || !initialLongitude) {
+      return null;
+    }
+
+    const latitude = Number(initialLatitude);
+    const longitude = Number(initialLongitude);
+
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
       return null;
     }
 
     return {
-      latitude: initialLatitude,
-      longitude: initialLongitude,
+      latitude,
+      longitude,
     };
   }, [initialLatitude, initialLongitude]);
 
@@ -71,12 +80,34 @@ export function SubmitSightingForm({
   const [formValues, setFormValues] = useState(emptyForm);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [locationFeedback, setLocationFeedback] = useState<string | null>(null);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
+  const [mapFocus, setMapFocus] = useState<MapFocusTarget | null>(
+    initialCoordinates
+      ? {
+          ...initialCoordinates,
+          zoom: 15.2,
+        }
+      : null,
+  );
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const galleryInputRef = useRef<HTMLInputElement | null>(null);
+  const pendingPhotoLoadedRef = useRef(false);
 
   useEffect(() => {
     setCoordinates(initialCoordinates);
+  }, [initialCoordinates]);
+
+  useEffect(() => {
+    if (initialCoordinates) {
+      setMapFocus({
+        ...initialCoordinates,
+        zoom: 15.2,
+      });
+    }
   }, [initialCoordinates]);
 
   useEffect(() => {
@@ -88,6 +119,7 @@ export function SubmitSightingForm({
       return;
     }
 
+    setLocationFeedback(null);
     setFormValues((current) => ({
       ...current,
       neighborhood: inferNeighborhoodFromCoordinates(coordinates),
@@ -108,6 +140,19 @@ export function SubmitSightingForm({
     };
   }, [photo]);
 
+  useEffect(() => {
+    if (pendingPhotoLoadedRef.current) {
+      return;
+    }
+
+    pendingPhotoLoadedRef.current = true;
+    const pendingPhoto = takePendingSubmitPhoto();
+
+    if (pendingPhoto) {
+      setPhoto(pendingPhoto);
+    }
+  }, []);
+
   async function handleToggleLike(id: string) {
     const result = await toggleLike(id);
 
@@ -125,6 +170,72 @@ export function SubmitSightingForm({
             }
           : sighting,
       ),
+    );
+  }
+
+  function handlePhotoSelected(nextPhoto: File | null) {
+    setPhoto(nextPhoto);
+
+    if (!nextPhoto && fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function handleUseMyPosition() {
+    if (
+      typeof window !== "undefined" &&
+      !window.isSecureContext &&
+      !["localhost", "127.0.0.1", "::1"].includes(window.location.hostname)
+    ) {
+      setLocationFeedback(
+        "La géolocalisation navigateur exige HTTPS ou localhost. Depuis un mobile en réseau local, il faut passer par une URL sécurisée.",
+      );
+      return;
+    }
+
+    if (!navigator.geolocation) {
+      setLocationFeedback("La géolocalisation n'est pas disponible sur ce navigateur.");
+      return;
+    }
+
+    setIsLocating(true);
+    setLocationFeedback(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const nextCoordinates = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
+
+        setCoordinates(nextCoordinates);
+        setMapFocus({
+          ...nextCoordinates,
+          zoom: 15.4,
+        });
+        setIsLocating(false);
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          setLocationFeedback(
+            "La permission de localisation a été refusée. Autorise-la dans le navigateur ou place le point manuellement.",
+          );
+        } else if (error.code === error.TIMEOUT) {
+          setLocationFeedback(
+            "La récupération de la position a expiré. Réessaie ou place le point manuellement.",
+          );
+        } else {
+          setLocationFeedback(
+            "Impossible de récupérer ta position. Place le point manuellement.",
+          );
+        }
+        setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 60000,
+      },
     );
   }
 
@@ -180,7 +291,7 @@ export function SubmitSightingForm({
 
   return (
     <main className="mx-auto flex w-full max-w-[88rem] flex-1 flex-col gap-8 px-6 py-10 sm:px-10 lg:px-12">
-      <section className="rounded-[2rem] border border-border bg-surface px-6 py-8 shadow-[var(--shadow)] md:px-10">
+      <section className="hidden rounded-[2rem] border border-border bg-surface px-6 py-8 shadow-[var(--shadow)] md:block md:px-10">
         <p className="text-sm font-medium uppercase tracking-[0.28em] text-accent-deep">
           Ajouter un chat
         </p>
@@ -193,7 +304,90 @@ export function SubmitSightingForm({
         </p>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+      <section className="grid items-start gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+        <section className="rounded-[1.75rem] border border-border bg-surface-strong p-6 shadow-sm md:hidden">
+          <div>
+            <p className="text-sm font-medium uppercase tracking-[0.24em] text-accent-deep">
+              Ajouter un chat
+            </p>
+            <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
+              Ajoute d&apos;abord une photo.
+            </h1>
+            <p className="mt-3 text-sm leading-7 text-muted">
+              Ajoute une photo du chat, puis place-le sur la carte et complète
+              les détails juste après.
+            </p>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={() => cameraInputRef.current?.click()}
+              className="inline-flex items-center justify-center rounded-full bg-[#915b76] px-5 py-3 text-sm font-semibold text-[#fff7fb]"
+            >
+              📸 Prendre une photo
+            </button>
+            <button
+              type="button"
+              onClick={() => galleryInputRef.current?.click()}
+              className="inline-flex items-center justify-center rounded-full border border-border bg-white/90 px-5 py-3 text-sm font-semibold text-foreground"
+            >
+              🖼️ Choisir depuis la galerie
+            </button>
+          </div>
+
+          <input
+            ref={cameraInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(event) => {
+              handlePhotoSelected(event.target.files?.[0] ?? null);
+              event.currentTarget.value = "";
+            }}
+          />
+          <input
+            ref={galleryInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(event) => {
+              handlePhotoSelected(event.target.files?.[0] ?? null);
+              event.currentTarget.value = "";
+            }}
+          />
+          <div className="mt-4 flex flex-wrap items-center gap-3">
+            <span className="rounded-full bg-white/85 px-4 py-2 text-sm text-muted">
+              {photo ? photo.name : "Aucune photo ajoutée"}
+            </span>
+            {photo ? (
+              <button
+                type="button"
+                onClick={() => handlePhotoSelected(null)}
+                className="rounded-full border border-border bg-white/80 px-4 py-2 text-sm font-semibold text-foreground"
+              >
+                Retirer la photo
+              </button>
+            ) : null}
+          </div>
+
+          <p className="mt-4 text-xs leading-5 text-muted">
+            Selon le navigateur, le téléphone peut parfois afficher son propre
+            sélecteur d&apos;action. En cas de refus ou suppression permanente du
+            listing, la photo est retirée du storage.
+          </p>
+
+          {photoPreviewUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={photoPreviewUrl}
+              alt="Aperçu du chat"
+              className="mt-5 h-56 w-full rounded-[1.5rem] border border-border object-cover md:h-64"
+            />
+          ) : null}
+        </section>
+
         <div className="grid gap-4">
           <CatMap
             sightings={sightings}
@@ -202,6 +396,7 @@ export function SubmitSightingForm({
             onSelectCoordinates={setCoordinates}
             onToggleLike={handleToggleLike}
             heightClassName="h-[24rem] md:h-[32rem] xl:h-[42rem]"
+            initialFocus={mapFocus}
           />
 
           <div className="rounded-[1.6rem] border border-border bg-surface-strong p-5 shadow-sm">
@@ -209,6 +404,14 @@ export function SubmitSightingForm({
               Point sélectionné
             </p>
             <div className="mt-4 flex flex-wrap items-center gap-3">
+              <button
+                type="button"
+                onClick={handleUseMyPosition}
+                disabled={isLocating}
+                className="rounded-full bg-[#915b76] px-4 py-2 text-sm font-semibold text-[#fff7fb] disabled:opacity-60"
+              >
+                {isLocating ? "Localisation..." : "Utiliser ma position"}
+              </button>
               <span className="rounded-full bg-[#ffe2ed] px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-accent-deep">
                 {coordinates
                   ? `${coordinates.latitude.toFixed(5)}, ${coordinates.longitude.toFixed(5)}`
@@ -222,10 +425,15 @@ export function SubmitSightingForm({
                 Réinitialiser
               </button>
             </div>
+            {locationFeedback ? (
+              <p className="mt-3 text-sm font-medium text-accent-deep">
+                {locationFeedback}
+              </p>
+            ) : null}
           </div>
         </div>
 
-        <div className="grid gap-6">
+        <div className="grid gap-6 xl:self-start">
           <form
             onSubmit={handleSubmit}
             className="rounded-[1.75rem] border border-border bg-surface-strong p-6 shadow-sm"
@@ -322,15 +530,14 @@ export function SubmitSightingForm({
                 />
               </label>
 
-              <label className="grid gap-3 text-sm font-medium text-foreground">
+              <label className="hidden gap-3 text-sm font-medium text-foreground md:grid">
                 Photo du chat
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
                   onChange={(event) => {
-                    const nextPhoto = event.target.files?.[0] ?? null;
-                    setPhoto(nextPhoto);
+                    handlePhotoSelected(event.target.files?.[0] ?? null);
                   }}
                   className="rounded-2xl border border-border bg-white px-4 py-3 text-sm font-normal outline-none transition file:mr-4 file:rounded-full file:border-0 file:bg-[#ffe2ed] file:px-4 file:py-2 file:text-sm file:font-semibold file:text-accent-deep"
                 />

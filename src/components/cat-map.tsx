@@ -235,6 +235,7 @@ export function CatMap({
         width: node.clientWidth,
         height: node.clientHeight,
       });
+      mapInstanceRef.current?.resize();
     };
 
     updateSize();
