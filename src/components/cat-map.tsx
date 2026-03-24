@@ -558,6 +558,34 @@ export function CatMap({
     }
 
     const sourceId = "catography-neighborhood-highlights";
+    const fillLayerId = `${sourceId}-fill`;
+    const lineLayerId = `${sourceId}-line`;
+
+    function removeLayers() {
+      const currentMap = map as maplibregl.Map;
+
+      if (currentMap.getLayer(lineLayerId)) {
+        currentMap.removeLayer(lineLayerId);
+      }
+
+      if (currentMap.getLayer(fillLayerId)) {
+        currentMap.removeLayer(fillLayerId);
+      }
+
+      if (currentMap.getSource(sourceId)) {
+        currentMap.removeSource(sourceId);
+      }
+    }
+
+    if (highlightedNeighborhoods.length === 0) {
+      if (map.isStyleLoaded()) {
+        removeLayers();
+      } else {
+        map.once("load", removeLayers);
+      }
+      return;
+    }
+
     const featureCollection = getNeighborhoodFeatureCollection(
       highlightedNeighborhoods.map((entry) => entry.name),
     );
@@ -591,7 +619,7 @@ export function CatMap({
         });
 
         currentMap.addLayer({
-          id: `${sourceId}-fill`,
+          id: fillLayerId,
           type: "fill",
           source: sourceId,
           paint: {
@@ -601,7 +629,7 @@ export function CatMap({
         });
 
         currentMap.addLayer({
-          id: `${sourceId}-line`,
+          id: lineLayerId,
           type: "line",
           source: sourceId,
           paint: {

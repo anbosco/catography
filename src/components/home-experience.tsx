@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState } from "react";
 import { CatMap } from "@/components/cat-map";
 import { CatSightingCard } from "@/components/cat-sighting-card";
-import { neighborhoodHighlightPalette, toggleFilterValue } from "@/lib/catalog-filters";
+import { toggleFilterValue } from "@/lib/catalog-filters";
 import { setPendingSubmitPhoto } from "@/lib/submit-launcher-store";
 import type {
   CatSighting,
@@ -69,11 +69,6 @@ export function HomeExperience({
     () => sightings.reduce((sum, sighting) => sum + sighting.likesCount, 0),
     [sightings],
   );
-
-  const highlightedNeighborhoods = selectedNeighborhoods.map((name, index) => ({
-    name,
-    color: neighborhoodHighlightPalette[index % neighborhoodHighlightPalette.length],
-  }));
 
   const submitHref = useMemo(() => {
     if (!selectedCoordinates) {
@@ -162,7 +157,6 @@ export function HomeExperience({
             onSelectCoordinates={setSelectedCoordinates}
             onToggleLike={handleToggleLike}
             heightClassName="h-[22rem] md:h-[28rem] xl:h-[38rem]"
-            highlightedNeighborhoods={highlightedNeighborhoods}
             initialFocus={initialMapFocus}
           />
 

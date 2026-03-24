@@ -46,3 +46,4 @@ SUPABASE_STORAGE_BUCKET=cat-photos
 
 - Le projet utilise `webpack` pour `dev` et `build` afin d'eviter un crash `Turbopack` observe dans cet environnement.
 - Le stockage fichier local reste temporaire. L'objectif est de le remplacer par Supabase.
+- La suite probable du projet cote moderation est decrite dans [`docs/admin-v2-roadmap.md`](docs/admin-v2-roadmap.md).

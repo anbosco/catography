@@ -18,12 +18,19 @@ export async function login(formData: FormData) {
   const username = String(formData.get("username") || "").trim();
   const password = String(formData.get("password") || "");
   const nextPath = String(formData.get("next") || "/admin");
-  const genericError = "Connexion admin impossible.";
 
   const adminAccount = await getAdminAccountByUsername(username);
 
   if (!adminAccount) {
-    redirect(toRedirectUrl(nextPath, genericError));
+    console.error("[admin-login] username not found in admin_accounts", {
+      username,
+    });
+    redirect(
+      toRedirectUrl(
+        nextPath,
+        "Identifiant admin introuvable dans admin_accounts.",
+      ),
+    );
   }
 
   const supabase = await createClient();
@@ -33,14 +40,36 @@ export async function login(formData: FormData) {
   });
 
   if (error) {
-    redirect(toRedirectUrl(nextPath, genericError));
+    console.error("[admin-login] signInWithPassword failed", {
+      username,
+      email: adminAccount.email,
+      message: error.message,
+      code: error.code,
+      status: error.status,
+    });
+    redirect(
+      toRedirectUrl(
+        nextPath,
+        `Connexion Supabase refusée: ${error.message}`,
+      ),
+    );
   }
 
   const currentAdmin = await getCurrentAdminAccount(data.user);
 
   if (!currentAdmin) {
+    console.error("[admin-login] auth ok but user is not an active admin", {
+      username,
+      userId: data.user?.id,
+      email: data.user?.email,
+    });
     await supabase.auth.signOut();
-    redirect(toRedirectUrl(nextPath, genericError));
+    redirect(
+      toRedirectUrl(
+        nextPath,
+        "Authentification réussie, mais ce user n'est pas reconnu comme admin actif.",
+      ),
+    );
   }
 
   revalidatePath("/", "layout");
